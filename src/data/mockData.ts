@@ -91,3 +91,39 @@ export function generateTrendData(): TrendDataPoint[] {
   return hours;
 }
 
+export const PRESENT_HEATMAP_DATA: HeatmapData[] = [
+  { city: "New York", lat: 40.7128, lon: -74.0060, intensity: "high", velocity: "high", issues: 45 },
+  { city: "Los Angeles", lat: 34.0522, lon: -118.2437, intensity: "medium", velocity: "medium", issues: 28 },
+  { city: "Chicago", lat: 41.8781, lon: -87.6298, intensity: "medium", velocity: "low", issues: 22 },
+  { city: "Houston", lat: 29.7604, lon: -95.3698, intensity: "low", velocity: "medium", issues: 15 },
+  { city: "Phoenix", lat: 33.4484, lon: -112.0740, intensity: "high", velocity: "high", issues: 38 },
+  { city: "Philadelphia", lat: 39.9526, lon: -75.1652, intensity: "medium", velocity: "low", issues: 19 },
+  { city: "San Antonio", lat: 29.4241, lon: -98.4936, intensity: "low", velocity: "low", issues: 12 },
+  { city: "San Diego", lat: 32.7157, lon: -117.1611, intensity: "low", velocity: "medium", issues: 14 },
+  { city: "Dallas", lat: 32.7767, lon: -96.7970, intensity: "medium", velocity: "high", issues: 25 },
+  { city: "San Jose", lat: 37.3382, lon: -121.8863, intensity: "medium", velocity: "medium", issues: 20 },
+  { city: "Austin", lat: 30.2672, lon: -97.7431, intensity: "low", velocity: "low", issues: 10 },
+  { city: "Jacksonville", lat: 30.3322, lon: -81.6557, intensity: "medium", velocity: "medium", issues: 18 },
+  { city: "Miami", lat: 25.7617, lon: -80.1918, intensity: "high", velocity: "high", issues: 42 },
+  { city: "Seattle", lat: 47.6062, lon: -122.3321, intensity: "medium", velocity: "low", issues: 21 },
+  { city: "Denver", lat: 39.7392, lon: -104.9903, intensity: "low", velocity: "medium", issues: 13 },
+];
+
+export const PREDICTIVE_HEATMAP_DATA: HeatmapData[] = [
+  { city: "New York", lat: 40.7128, lon: -74.0060, intensity: "high", velocity: "high", issues: 52, predicted: true },
+  { city: "Los Angeles", lat: 34.0522, lon: -118.2437, intensity: "high", velocity: "high", issues: 35, predicted: true },
+  { city: "Chicago", lat: 41.8781, lon: -87.6298, intensity: "medium", velocity: "medium", issues: 26, predicted: true },
+  { city: "Houston", lat: 29.7604, lon: -95.3698, intensity: "medium", velocity: "medium", issues: 20, predicted: true },
+  { city: "Phoenix", lat: 33.4484, lon: -112.0740, intensity: "high", velocity: "high", issues: 45, predicted: true },
+  { city: "Philadelphia", lat: 39.9526, lon: -75.1652, intensity: "medium", velocity: "medium", issues: 24, predicted: true },
+  { city: "San Antonio", lat: 29.4241, lon: -98.4936, intensity: "low", velocity: "low", issues: 15, predicted: true },
+  { city: "San Diego", lat: 32.7157, lon: -117.1611, intensity: "medium", velocity: "medium", issues: 18, predicted: true },
+  { city: "Dallas", lat: 32.7767, lon: -96.7970, intensity: "high", velocity: "high", issues: 32, predicted: true },
+  { city: "San Jose", lat: 37.3382, lon: -121.8863, intensity: "medium", velocity: "high", issues: 25, predicted: true },
+  { city: "Austin", lat: 30.2672, lon: -97.7431, intensity: "medium", velocity: "medium", issues: 16, predicted: true },
+  { city: "Jacksonville", lat: 30.3322, lon: -81.6557, intensity: "medium", velocity: "medium", issues: 22, predicted: true },
+  { city: "Miami", lat: 25.7617, lon: -80.1918, intensity: "high", velocity: "high", issues: 48, predicted: true },
+  { city: "Seattle", lat: 47.6062, lon: -122.3321, intensity: "medium", velocity: "medium", issues: 28, predicted: true },
+  { city: "Denver", lat: 39.7392, lon: -104.9903, intensity: "medium", velocity: "low", issues: 17, predicted: true },
+];
+
