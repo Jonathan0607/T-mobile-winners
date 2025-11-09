@@ -150,9 +150,9 @@ class MultiAgentSystem:
             "1. Clearly indicate which platforms were searched\n"
             "2. Identify key themes and patterns from each source\n"
             "3. Highlight specific complaints or issues with examples\n"
-            "4. Note any positive feedback\n"
+            "4. Highlight and contextualize any positive feedback\n"
             "5. Include relevant statistics (e.g., frequency of issues, ratings)\n"
-            "6. Be factual and based only on retrieved information\n"
+            "6. Be factual and only rely on retrieved information\n"
             "7. Distinguish between Reddit discussions and Play Store reviews when relevant"
         )
         
