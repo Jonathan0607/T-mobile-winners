@@ -1027,8 +1027,8 @@ def _generate_trend_data_from_chi(base_chi: float, chi_trend: float) -> list:
         List of trend data points with time and score
     """
     try:
-        # Generate 26 data points over 24 hours
-        time_points = [datetime.now() - timedelta(hours=24 - i) for i in range(26)]
+        # Generate 26 data points over 25 hours
+        time_points = [datetime.now() - timedelta(hours=25 - i) for i in range(26)]
         
         # Create trend line: start lower if trend is negative, end at base_chi
         if chi_trend > 0:
@@ -1049,7 +1049,7 @@ def _generate_trend_data_from_chi(base_chi: float, chi_trend: float) -> list:
     except Exception as e:
         logger.warning(f"Error generating trend data: {e}, using simple fallback")
         # Simple fallback: constant score
-        return [{"time": (datetime.now() - timedelta(hours=24-i)).strftime("%H:%M"), "score": round(base_chi, 2)} for i in range(26)]
+        return [{"time": (datetime.now() - timedelta(hours=25-i)).strftime("%H:%M"), "score": round(base_chi, 2)} for i in range(26)]
 
 
 def generate_summary_json(output_file: str = "ai_generated_summary.json") -> Optional[Dict[str, Any]]:

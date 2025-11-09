@@ -25,7 +25,10 @@ export default function TrendChart() {
         }
         const jsonData = await response.json();
         if (jsonData.trend_data && Array.isArray(jsonData.trend_data)) {
-          setTrendData(jsonData.trend_data);
+          // Remove the last data point
+          const trendDataWithoutLast = jsonData.trend_data.slice(0, -1);
+          setTrendData(trendDataWithoutLast);
+          console.log(trendDataWithoutLast);
         }
         setError(null);
       } catch (err) {
@@ -144,7 +147,7 @@ export default function TrendChart() {
       gridcolor: '#404040',
       showgrid: true,
       range: trendData.length > 0 ? [
-        0, // <-- CHANGE THIS: Force the axis to start at 0
+        Math.max(0, Math.min(...trendData.map(d => d.score)) - 10),
         Math.min(100, Math.max(...trendData.map(d => d.score)) + 10)
       ] : [0, 100],
       tickfont: { size: 11, color: '#9CA3AF' },

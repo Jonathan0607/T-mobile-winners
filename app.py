@@ -156,7 +156,7 @@ def summary():
 
 # Helper to generate mock trend data
 def generate_trend_data():
-    time_points = [datetime.now() - timedelta(hours=24 - i) for i in range(26)]
+    time_points = [datetime.now() - timedelta(hours=25 - i) for i in range(26)]
     scores = np.clip(
         88 + 3 * np.sin(np.linspace(0, 2 * np.pi, 26)) - np.arange(26) * 0.1,
         75, 95
