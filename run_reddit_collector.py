@@ -39,7 +39,7 @@ def main():
     
     # Display results
     logger.info("\n" + "=" * 60)
-    logger.info(f"📊 Collected {len(posts)} unique posts")
+    logger.info(f" Collected {len(posts)} unique posts")
     logger.info("=" * 60)
     
     # Show first 5 posts
