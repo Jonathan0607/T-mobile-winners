@@ -16,6 +16,8 @@ interface TriageQueueItem {
   status: string;
   owner_team: string;
   resolution_summary?: string;
+  urgency?: string;
+  time_to_fix?: number;
 }
 
 interface CauseBreakdown {
@@ -69,31 +71,23 @@ export default function ActionableInsights() {
     fetchData();
   }, []);
 
-  const getStatusColor = (status: string): string => {
-    switch (status.toLowerCase()) {
-      case 'new':
+  const getUrgencyColor = (urgency: string): string => {
+    switch (urgency?.toLowerCase()) {
+      case 'critical':
+      case 'high':
+        return '#D62828'; // Red
+      case 'medium':
         return '#FFC300'; // Yellow
-      case 'in progress':
-        return '#3B82F6'; // Blue
-      case 'resolved':
+      case 'low':
         return '#10B981'; // Green
       default:
         return '#9CA3AF'; // Gray
     }
   };
 
-  const getVelocityColor = (velocity: number): string => {
-    if (velocity > 8.0) {
-      return '#D62828'; // Bright red
-    }
-    return '#CCCCCC'; // Default gray
-  };
-
-  const getTimeSinceAlertColor = (time: number): string => {
-    if (time > 4.0) {
-      return '#D62828'; // Bold red
-    }
-    return '#CCCCCC'; // Default gray
+  const getTimeToFixColor = (time: number): string => {
+    
+    return '#9CA3AF'; // Green
   };
 
   if (loading) {
@@ -128,98 +122,19 @@ export default function ActionableInsights() {
     return null;
   }
 
-  // Filter resolved items for the learning loop
-  const resolvedItems = data.queue.filter(item => item.status.toLowerCase() === 'resolved');
-
   return (
     <div className="p-8 min-h-screen bg-[#1A1A1A] text-white">
       <h1 className="text-3xl font-bold mb-8 ml-8">Actionable Insights</h1>
 
-      {/* Row 1: KPIs & Triage Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      {/* Row 1: KPIs & Root Cause Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Critical Issues KPI */}
         <div className="bg-[#2C2C2C] rounded-xl p-6 border-l-4 border-[#E20074]">
-          <h3 className="text-sm text-[#9CA3AF] mb-2">Critical Issues</h3>
-          <p className="text-4xl font-bold text-white">{data.kpis.critical_count}</p>
+          <h3 className="text-xl text-[#9CA3AF] mb-2">Critical Issues</h3>
+          <p className="text-6xl font-bold text-white">{data.kpis.critical_count}</p>
         </div>
 
-        {/* MTTR KPI */}
-        <div className="bg-[#2C2C2C] rounded-xl p-6 border-l-4 border-[#E20074]">
-          <h3 className="text-sm text-[#9CA3AF] mb-2">MTTR (Last 7 Days)</h3>
-          <p className="text-4xl font-bold text-white">{data.kpis.mttr_h.toFixed(1)}h</p>
-        </div>
-
-        {/* Issues Resolved KPI */}
-        <div className="bg-[#2C2C2C] rounded-xl p-6 border-l-4 border-[#E20074]">
-          <h3 className="text-sm text-[#9CA3AF] mb-2">Issues Resolved (24 Hrs)</h3>
-          <p className="text-4xl font-bold text-white">{data.kpis.resolved_24h}</p>
-        </div>
-      </div>
-
-      {/* Row 2: Triage Queue */}
-      <div className="mb-8">
-        <div className="bg-[#2C2C2C] rounded-xl p-6">
-          <h2 className="text-2xl font-semibold mb-4">Active Triage Queue (High Velocity Alerts)</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[#555555]">
-                  <th className="text-left py-3 px-4 text-white font-semibold">Title</th>
-                  <th className="text-center py-3 px-4 text-white font-semibold">Velocity</th>
-                  <th className="text-center py-3 px-4 text-white font-semibold">Time Since Alert (h)</th>
-                  <th className="text-center py-3 px-4 text-white font-semibold">Status</th>
-                  <th className="text-left py-3 px-4 text-white font-semibold">Owner Team</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.queue.map((item) => (
-                  <tr 
-                    key={item.id} 
-                    className="border-b border-[#404040] hover:bg-[#3C3C3C] transition-colors"
-                  >
-                    <td className="py-3 px-4 text-[#CCCCCC] font-medium">{item.title}</td>
-                    <td 
-                      className="py-3 px-4 text-center font-semibold"
-                      style={{ 
-                        color: getVelocityColor(item.velocity),
-                        backgroundColor: item.velocity > 8.0 ? 'rgba(214, 40, 40, 0.1)' : 'transparent'
-                      }}
-                    >
-                      {item.velocity.toFixed(1)}
-                    </td>
-                    <td 
-                      className="py-3 px-4 text-center font-semibold"
-                      style={{ color: getTimeSinceAlertColor(item.time_since_alert_h) }}
-                    >
-                      {item.time_since_alert_h.toFixed(1)}
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <span
-                        className="px-3 py-1 rounded-full text-sm font-medium"
-                        style={{
-                          backgroundColor: getStatusColor(item.status),
-                          color: '#FFFFFF'
-                        }}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="px-2 py-1 bg-[#3C3C3C] rounded text-[#CCCCCC] text-sm">
-                        {item.owner_team}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      {/* Row 3: Analysis & Learning */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Column 1: Root Cause Breakdown */}
+        {/* Systemic Root Cause Breakdown */}
         <div className="bg-[#2C2C2C] rounded-xl p-6">
           <h2 className="text-2xl font-semibold mb-4">Systemic Root Cause Breakdown</h2>
           <ResponsiveContainer width="100%" height={350}>
@@ -264,49 +179,54 @@ export default function ActionableInsights() {
             </PieChart>
           </ResponsiveContainer>
         </div>
+      </div>
 
-        {/* Column 2: Learning Loop */}
+      {/* Row 2: Triage Queue */}
+      <div className="mb-8">
         <div className="bg-[#2C2C2C] rounded-xl p-6">
-          <h2 className="text-2xl font-semibold mb-4">Learnings from Resolved Issues</h2>
+          <h2 className="text-2xl font-semibold mb-4">Active Actions Queue (High Velocity Alerts)</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#555555]">
                   <th className="text-left py-3 px-4 text-white font-semibold">Title</th>
-                  <th className="text-left py-3 px-4 text-white font-semibold">Owner</th>
-                  <th className="text-left py-3 px-4 text-white font-semibold">Resolution Summary</th>
+                  <th className="text-center py-3 px-4 text-white font-semibold">Time to Fix (Days)</th>
+                  <th className="text-center py-3 px-4 text-white font-semibold">Urgency</th>
                 </tr>
               </thead>
               <tbody>
-                {resolvedItems.length > 0 ? (
-                  resolvedItems.map((item) => (
-                    <tr 
-                      key={item.id} 
-                      className="border-b border-[#404040] hover:bg-[#3C3C3C] transition-colors"
+                {data.queue.map((item) => (
+                  <tr 
+                    key={item.id} 
+                    className="border-b border-[#404040] hover:bg-[#3C3C3C] transition-colors"
+                  >
+                    <td className="py-3 px-4 text-[#CCCCCC] font-medium">{item.title}</td>
+                    <td 
+                      className="py-3 px-4 text-center font-semibold"
+                      style={{ color: getTimeToFixColor(item.time_to_fix || item.time_since_alert_h) }}
                     >
-                      <td className="py-3 px-4 text-[#CCCCCC] font-medium">{item.title}</td>
-                      <td className="py-3 px-4">
-                        <span className="px-2 py-1 bg-[#3C3C3C] rounded text-[#CCCCCC] text-sm">
-                          {item.owner_team}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-[#CCCCCC] text-sm">
-                        {item.resolution_summary || 'No summary available'}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={3} className="py-4 px-4 text-center text-[#9CA3AF]">
-                      No resolved issues to display
+                      {(item.time_to_fix || item.time_since_alert_h).toFixed(1)}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <span
+                        className="px-3 py-1 rounded-full text-sm font-medium"
+                        style={{
+                          backgroundColor: getUrgencyColor(item.urgency || item.status),
+                          color: '#FFFFFF'
+                        }}
+                      >
+                        {item.urgency || item.status}
+                      </span>
                     </td>
                   </tr>
-                )}
+                ))}
               </tbody>
             </table>
           </div>
         </div>
       </div>
+
+
     </div>
   );
 }

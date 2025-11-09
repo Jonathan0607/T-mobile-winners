@@ -74,29 +74,6 @@ export const MOCK_COMPETITIVE_DATA: CompetitiveData[] = [
   { carrier: "Verizon (81.2)", score: 81.2 },
 ];
 
-export const PRESENT_HEATMAP_DATA: HeatmapData[] = [
-  { city: "New York", lat: 40.7128, lon: -74.0060, intensity: "high", velocity: "high", issues: 45 },
-  { city: "Los Angeles", lat: 34.0522, lon: -118.2437, intensity: "medium", velocity: "medium", issues: 28 },
-  { city: "Miami", lat: 25.7617, lon: -80.1918, intensity: "high", velocity: "high", issues: 52 },
-  { city: "Chicago", lat: 41.8781, lon: -87.6298, intensity: "low", velocity: "low", issues: 12 },
-  { city: "Seattle", lat: 47.6062, lon: -122.3321, intensity: "medium", velocity: "medium", issues: 19 },
-  { city: "Dallas", lat: 32.7767, lon: -96.7970, intensity: "medium", velocity: "medium", issues: 22 },
-  { city: "Houston", lat: 29.7604, lon: -95.3698, intensity: "low", velocity: "low", issues: 15 },
-  { city: "Atlanta", lat: 33.7490, lon: -84.3880, intensity: "high", velocity: "high", issues: 38 },
-];
-
-export const PREDICTIVE_HEATMAP_DATA: HeatmapData[] = [
-  { city: "New York", lat: 40.7128, lon: -74.0060, intensity: "high", velocity: "high", issues: 58, predicted: true },
-  { city: "Los Angeles", lat: 34.0522, lon: -118.2437, intensity: "high", velocity: "high", issues: 42, predicted: true },
-  { city: "Miami", lat: 25.7617, lon: -80.1918, intensity: "high", velocity: "high", issues: 65, predicted: true },
-  { city: "Chicago", lat: 41.8781, lon: -87.6298, intensity: "medium", velocity: "medium", issues: 25, predicted: true },
-  { city: "Seattle", lat: 47.6062, lon: -122.3321, intensity: "high", velocity: "high", issues: 32, predicted: true },
-  { city: "Dallas", lat: 32.7767, lon: -96.7970, intensity: "medium", velocity: "medium", issues: 28, predicted: true },
-  { city: "Houston", lat: 29.7604, lon: -95.3698, intensity: "medium", velocity: "medium", issues: 22, predicted: true },
-  { city: "Atlanta", lat: 33.7490, lon: -84.3880, intensity: "high", velocity: "high", issues: 48, predicted: true },
-  { city: "Phoenix", lat: 33.4484, lon: -112.0740, intensity: "medium", velocity: "medium", issues: 18, predicted: true },
-  { city: "Denver", lat: 39.7392, lon: -104.9903, intensity: "low", velocity: "low", issues: 14, predicted: true },
-];
 
 export function generateTrendData(): TrendDataPoint[] {
   const hours: TrendDataPoint[] = [];
