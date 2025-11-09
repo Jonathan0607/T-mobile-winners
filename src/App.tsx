@@ -2,10 +2,13 @@ import { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import CompetitiveAnalysis from './pages/CompetitiveIntelligence';
+import VibeReport from './pages/VibeReport';
+import ActionableInsights from './pages/ActionableInsights';
+import AICoPilot from './pages/AICoPilot';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currentPage, setCurrentPage] = useState<'home' | 'competitive'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'competitive' | 'vibe_report' | 'actionable_insights' | 'ai_copilot'>('home');
 
   return (
     <div className="min-h-screen bg-[#1A1A1A] text-white">
@@ -29,8 +32,14 @@ function App() {
         <div className="w-full h-full">
           {currentPage === 'home' ? (
             <Home isSidebarOpen={sidebarOpen} />
-          ) : (
+          ) : currentPage === 'competitive' ? (
             <CompetitiveAnalysis />
+          ) : currentPage === 'vibe_report' ? (
+            <VibeReport />
+          ) : currentPage === 'actionable_insights' ? (
+            <ActionableInsights />
+          ) : (
+            <AICoPilot />
           )}
         </div>
       </main>

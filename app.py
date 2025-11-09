@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import pandas as pd
 import numpy as np
@@ -85,6 +85,39 @@ def get_competitive_data():
         ]
     }
 
+# Vibe Report / Internal Analysis Data
+def get_vibe_report_data():
+    return {
+        "sentiment_polarity": [
+            {"name": "Positive", "value": 45, "color": MAGENTA},
+            {"name": "Neutral", "value": 35, "color": "#9CA3AF"},
+            {"name": "Negative", "value": 20, "color": "#D62828"},
+        ],
+        "sentiment_by_source": [
+            {"source": "Reddit", "Positive": 120, "Neutral": 80, "Negative": 50},
+            {"source": "Google Play", "Positive": 450, "Neutral": 200, "Negative": 150},
+            {"source": "Apple App Store", "Positive": 380, "Neutral": 180, "Negative": 120},
+        ],
+        "top_topics": [
+            {"topic": "5G Network Speed", "volume": 1250, "nss": 62},
+            {"topic": "Customer Service Response Time", "volume": 890, "nss": -35},
+            {"topic": "Billing Transparency", "volume": 720, "nss": 55},
+            {"topic": "Data Plan Pricing", "volume": 680, "nss": 48},
+            {"topic": "Coverage in Rural Areas", "volume": 550, "nss": -28},
+            {"topic": "App Usability", "volume": 420, "nss": 38},
+            {"topic": "International Roaming", "volume": 380, "nss": -15},
+            {"topic": "Device Trade-In Program", "volume": 320, "nss": 42},
+        ],
+        "delight_feed": [
+            {"snippet": "Love the 5G speeds in my area! Fastest I've ever experienced.", "source": "Reddit", "emotion": "Joy"},
+            {"snippet": "Customer service actually solved my issue on the first call. Amazing!", "source": "Google Play", "emotion": "Satisfaction"},
+            {"snippet": "No hidden fees - exactly what they promised. Refreshing change!", "source": "Apple App Store", "emotion": "Trust"},
+            {"snippet": "The app makes managing my account so easy. Great UX!", "source": "Reddit", "emotion": "Delight"},
+            {"snippet": "Trade-in program got me a great deal on my new phone.", "source": "Google Play", "emotion": "Gratitude"},
+            {"snippet": "Coverage has been amazing even in remote areas. Really impressed!", "source": "Apple App Store", "emotion": "Surprise"},
+        ]
+    }
+
 
 # --- API Endpoints ---
 
@@ -97,6 +130,154 @@ def summary():
 def competitive():
     """Returns data for the detailed Competitive Intelligence page."""
     return jsonify(get_competitive_data())
+
+@app.route('/api/vibecheck/vibe_report', methods=['GET'])
+def vibe_report():
+    """Returns data for the Vibe Report: Internal Analysis page."""
+    return jsonify(get_vibe_report_data())
+
+# Actionable Insights / Triage Queue Data
+def get_triage_queue_data():
+    return {
+        "kpis": {
+            "critical_count": 12,
+            "mttr_h": 3.5,
+            "resolved_24h": 28
+        },
+        "queue": [
+            {
+                "id": "T001",
+                "title": "5G Network Outage - Miami Metro Area",
+                "velocity": 9.2,
+                "time_since_alert_h": 2.3,
+                "status": "New",
+                "owner_team": "Network Engineering",
+                "resolution_summary": None
+            },
+            {
+                "id": "T002",
+                "title": "Customer Service Response Time Spike",
+                "velocity": 7.8,
+                "time_since_alert_h": 5.1,
+                "status": "In Progress",
+                "owner_team": "Customer Support",
+                "resolution_summary": None
+            },
+            {
+                "id": "T003",
+                "title": "Billing System Integration Error",
+                "velocity": 6.5,
+                "time_since_alert_h": 1.2,
+                "status": "New",
+                "owner_team": "IT Operations",
+                "resolution_summary": None
+            },
+            {
+                "id": "T004",
+                "title": "App Store Review Score Decline",
+                "velocity": 8.9,
+                "time_since_alert_h": 3.7,
+                "status": "In Progress",
+                "owner_team": "Product Team",
+                "resolution_summary": None
+            },
+            {
+                "id": "T005",
+                "title": "Data Plan Confusion - Customer Complaints",
+                "velocity": 5.2,
+                "time_since_alert_h": 0.8,
+                "status": "Resolved",
+                "owner_team": "Marketing",
+                "resolution_summary": "Clarified plan details on website and updated customer-facing documentation."
+            },
+            {
+                "id": "T006",
+                "title": "Rural Coverage Gap - Montana Region",
+                "velocity": 4.8,
+                "time_since_alert_h": 6.2,
+                "status": "In Progress",
+                "owner_team": "Network Engineering",
+                "resolution_summary": None
+            },
+            {
+                "id": "T007",
+                "title": "International Roaming Charges Issue",
+                "velocity": 7.1,
+                "time_since_alert_h": 2.9,
+                "status": "Resolved",
+                "owner_team": "Billing",
+                "resolution_summary": "Fixed calculation error in roaming charge algorithm. Refunds processed for affected customers."
+            },
+            {
+                "id": "T008",
+                "title": "Device Trade-In Program Delay",
+                "velocity": 5.9,
+                "time_since_alert_h": 4.5,
+                "status": "Resolved",
+                "owner_team": "Operations",
+                "resolution_summary": "Streamlined trade-in process and added additional processing capacity."
+            }
+        ],
+        "cause_breakdown": [
+            {"name": "Network Infrastructure", "value": 35, "color": CRITICAL_RED},
+            {"name": "Customer Service", "value": 25, "color": "#FFC300"},
+            {"name": "Billing System", "value": 20, "color": "#9CA3AF"},
+            {"name": "Product/App Issues", "value": 15, "color": "#3B82F6"},
+            {"name": "Other", "value": 5, "color": "#6B7280"}
+        ]
+    }
+
+@app.route('/api/vibecheck/triage_queue', methods=['GET'])
+def triage_queue():
+    """Returns data for the Actionable Insights page."""
+    return jsonify(get_triage_queue_data())
+
+@app.route('/api/vibecheck/chat', methods=['POST'])
+def chat():
+    """Handles chat requests from the AI Co-Pilot interface."""
+    try:
+        data = request.get_json()
+        query = data.get('query', '')
+        
+        if not query:
+            return jsonify({'error': 'No query provided'}), 400
+        
+        # Simulated AI response (in production, this would call Nemotron AI)
+        # For now, return a helpful mock response based on the query
+        response_text = generate_ai_response(query)
+        
+        return jsonify({'response': response_text}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+def generate_ai_response(query: str) -> str:
+    """Generate a mock AI response based on the user's query."""
+    query_lower = query.lower()
+    
+    # Pattern matching for common questions
+    if 'critical' in query_lower or 'issue' in query_lower:
+        return "Based on the current triage queue, there are 12 critical issues requiring immediate attention. The top priority is the 5G Network Outage in Miami Metro Area with a velocity of 9.2. I recommend escalating this to Network Engineering immediately."
+    
+    elif 'mttr' in query_lower or 'mean time' in query_lower:
+        return "The Mean Time To Resolution (MTTR) for the last 7 days is 3.5 hours. This is within our target range. However, we've resolved 28 issues in the last 24 hours, indicating high activity levels."
+    
+    elif 'sentiment' in query_lower or 'vibe' in query_lower:
+        return "The current CHI Score is 85.2, showing a slight downward trend of -1.5. Sentiment analysis reveals 45% positive, 35% neutral, and 20% negative mentions. The main pain points are Customer Service Response Time (NSS: -35) and Coverage in Rural Areas (NSS: -28)."
+    
+    elif 'competitive' in query_lower or 'competitor' in query_lower:
+        return "T-Mobile currently has a vibe score of 85.2, compared to AT&T (87.7) and Verizon (81.2). Our main competitive advantages are in Pricing/Plans and 5G Speed. Verizon's weakness is expensive plans, which we can leverage in marketing."
+    
+    elif 'network' in query_lower or 'coverage' in query_lower:
+        return "Network Infrastructure issues account for 35% of all root causes. The most critical issue is a 5G Network Outage in Miami Metro Area. I recommend prioritizing network stability improvements and expanding coverage in rural areas."
+    
+    elif 'billing' in query_lower or 'charge' in query_lower:
+        return "Billing System issues represent 20% of root causes. Recent resolutions include fixing international roaming charge calculations. The system is currently stable, but ongoing monitoring is recommended."
+    
+    elif 'help' in query_lower or 'what' in query_lower:
+        return "I can help you with:\n\n• Critical issues and triage queue status\n• MTTR and resolution metrics\n• Sentiment analysis and CHI scores\n• Competitive intelligence\n• Network and infrastructure insights\n• Billing and customer service data\n\nWhat would you like to know more about?"
+    
+    else:
+        return f"I understand you're asking about: '{query}'. Based on the current dashboard data, I can provide insights on critical issues, sentiment analysis, competitive intelligence, and operational metrics. Could you be more specific about what you'd like to know?"
 
 # --- Run Server ---
 if __name__ == '__main__':

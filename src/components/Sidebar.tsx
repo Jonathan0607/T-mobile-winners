@@ -1,8 +1,8 @@
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
-  currentPage: 'home' | 'competitive';
-  onPageChange: (page: 'home' | 'competitive') => void;
+  currentPage: 'home' | 'competitive' | 'vibe_report' | 'actionable_insights' | 'ai_copilot';
+  onPageChange: (page: 'home' | 'competitive' | 'vibe_report' | 'actionable_insights' | 'ai_copilot') => void;
 }
 
 export default function Sidebar({ isOpen, onToggle, currentPage, onPageChange }: SidebarProps) {
@@ -45,7 +45,7 @@ export default function Sidebar({ isOpen, onToggle, currentPage, onPageChange }:
           <hr className="border-[#555555] mb-4" />
 
           {/* Navigation Links */}
-          <nav className="space-y-2">
+          <nav className="space-y-10">
             <div
               onClick={() => onPageChange('home')}
               className={`px-4 py-3 rounded-md text-base font-semibold transition-colors cursor-pointer ${
@@ -66,14 +66,35 @@ export default function Sidebar({ isOpen, onToggle, currentPage, onPageChange }:
             >
               Competitive Analysis
             </div>
-            <div className="text-[#CCCCCC] px-4 py-3 rounded-md text-base font-medium hover:bg-[#3C3C3C] transition-colors cursor-pointer">
-              🔧 Network Engineering
+            <div
+              onClick={() => onPageChange('vibe_report')}
+              className={`px-4 py-3 rounded-md text-base font-semibold transition-colors cursor-pointer ${
+                currentPage === 'vibe_report'
+                  ? 'bg-[#E20074] text-white'
+                  : 'text-[#CCCCCC] hover:bg-[#3C3C3C]'
+              }`}
+            >
+              Vibe Report
             </div>
-            <div className="text-[#CCCCCC] px-4 py-3 rounded-md text-base font-medium hover:bg-[#3C3C3C] transition-colors cursor-pointer">
-              💬 Social Media
+            <div
+              onClick={() => onPageChange('actionable_insights')}
+              className={`px-4 py-3 rounded-md text-base font-semibold transition-colors cursor-pointer ${
+                currentPage === 'actionable_insights'
+                  ? 'bg-[#E20074] text-white'
+                  : 'text-[#CCCCCC] hover:bg-[#3C3C3C]'
+              }`}
+            >
+              Actionable Insights
             </div>
-            <div className="text-[#CCCCCC] px-4 py-3 rounded-md text-base font-medium hover:bg-[#3C3C3C] transition-colors cursor-pointer">
-              📈 Sales
+            <div
+              onClick={() => onPageChange('ai_copilot')}
+              className={`px-4 py-3 rounded-md text-base font-semibold transition-colors cursor-pointer ${
+                currentPage === 'ai_copilot'
+                  ? 'bg-[#E20074] text-white'
+                  : 'text-[#CCCCCC] hover:bg-[#3C3C3C]'
+              }`}
+            >
+              AI Co-Pilot
             </div>
           </nav>
         </div>
