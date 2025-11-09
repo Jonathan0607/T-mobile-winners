@@ -56,7 +56,6 @@ export default function VibeScoreCard({ isSidebarOpen }: VibeScoreCardProps) {
   const trendMarginTop = isSidebarOpen ? "1rem" : "3rem";
   // Increase font size when sidebar is closed
   const trendFontSize = isSidebarOpen ? 16 : 22; // Scale up from 16px to 22px
-  const trendArrowSize = isSidebarOpen ? "text-xl" : "text-2xl"; // Scale up arrow size
 
   if (loading) {
     return (
