@@ -136,13 +136,6 @@ export default function CompetitiveChart({ isSidebarOpen }: CompetitiveChartProp
           </div>
         )}
       </div>
-
-      {/* Insight Text */}
-      <div className="bg-[#2C2C2C] rounded-lg p-4 mt-4 flex-shrink-0">
-        <p className="text-[#CCCCCC] text-sm m-0">
-          <strong className="text-[#E20074]">Insight:</strong> Verizon Weakness: Expensive Plans
-        </p>
-      </div>
     </div>
   );
 }
