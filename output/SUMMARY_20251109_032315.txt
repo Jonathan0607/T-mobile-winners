@@ -1,0 +1,35 @@
+Multi-Agent System Run Summary
+================================================================================
+Run Timestamp: 20251109_032315
+Generated: 2025-11-09 03:27:19
+
+AVAILABLE INDEXES:
+reddit, playstore
+
+FILES GENERATED:
+================================================================================
+
+METHOD 0 - Raw Index Exports:
+  - reddit: 302 documents (file: all_reddit_documents_20251109_032315.jsonl, summary: summary_reddit_index_20251109_032315.txt)
+  - playstore: 0 documents (file: all_playstore_documents_20251109_032315.jsonl, summary: summary_playstore_index_20251109_032315.txt)
+
+METHOD 1 - AgenticRAG Direct Queries:
+  1. method1_query1_app_complaints_20251109_032315.txt (Query: "What are the main complaints about the T-Mobile app?")
+  2. method1_query2_network_issues_20251109_032315.txt (Query: "What network issues are people discussing on Reddit?")
+
+METHOD 2 - Comprehensive Multi-Agent Report:
+  3. method2_billing_report_full_20251109_032315.txt (Complete report)
+  4. method2_billing_01_research_20251109_032315.txt (Research stage)
+  5. method2_billing_02_outline_20251109_032315.txt (Outline stage)
+  6. method2_billing_03_draft_20251109_032315.txt (Draft stage)
+  7. method2_billing_04_final_20251109_032315.txt (Final stage) (Query: "Analyze all complaints about billing and pricing")
+
+METHOD 3 - Auto-Initialized Quick Report:
+  8. method3_customer_service_report_20251109_032315.txt (Query: "What are users saying about customer service?")
+
+LOG FILE:
+  9. run_log_20251109_032315.txt (Complete execution log)
+
+================================================================================
+Raw exports are JSONL (one document per line). Summaries contain aggregate statistics.
+To view any report or dataset, open the corresponding file in the output folder.

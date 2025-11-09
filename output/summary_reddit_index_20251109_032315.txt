@@ -1,0 +1,31 @@
+Summary for reddit index
+============================================================
+Total Documents: 302
+
+Top Sentiments:
+  neutral: 302
+
+Top Categories:
+  data_speed: 66
+  customer_service: 64
+  plan_billing: 58
+  device_compatibility: 34
+  general: 34
+  network_connectivity: 24
+  call_quality: 12
+  signal_strength: 6
+  network_outage: 2
+  roaming: 2
+
+Subreddit Distribution:
+  tmobile: 302
+
+Score Buckets:
+  <=0: 1
+  1-10: 8
+  11-50: 17
+  >50: 13
+
+Date Span:
+  Earliest: 2025-11-02
+  Latest: 2025-11-08

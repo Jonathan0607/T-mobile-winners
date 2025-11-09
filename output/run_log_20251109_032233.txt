@@ -1,0 +1,15 @@
+================================================================================
+Multi-Agent System with Multiple Azure Indexes - Example
+================================================================================
+Run Timestamp: 20251109_032233
+Output Directory: output
+
+?? Initializing Nemotron client...
+? Nemotron client initialized
+
+?? Initializing Azure Cognitive Search indexes...
+?? Reddit index not available: Invalid URL "tmobilesentimentstorage.search.windows.net/indexes('tmobile-reddit-posts')?api-version=2025-09-01": No scheme supplied. Perhaps you meant https://tmobilesentimentstorage.search.windows.net/indexes('tmobile-reddit-posts')?api-version=2025-09-01?
+?? Play Store index not available: Invalid URL "tmobilesentimentstorage.search.windows.net/indexes('tmobile-playstore-reviews')?api-version=2025-09-01": No scheme supplied. Perhaps you meant https://tmobilesentimentstorage.search.windows.net/indexes('tmobile-playstore-reviews')?api-version=2025-09-01?
+? No indexes available. Please run data collection scripts first:
+   python collect_reddit.py
+   python collect_playstore.py
