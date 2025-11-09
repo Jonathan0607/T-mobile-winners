@@ -50,11 +50,7 @@ export default function VibeScoreCard({ isSidebarOpen }: VibeScoreCardProps) {
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference * (1 - percentage);
 
-  const trendValue = Math.abs(data?.chi_trend ?? 0);
-  const trendPeriod = data?.trend_period ?? "Last Hour";
-  const isPositive = (data?.chi_trend ?? 0) > 0 || data?.trend_direction === "up";
-  const trendColor = isPositive ? "#10B981" : "#D62828"; // Green for positive, red for negative
-  const trendArrow = isPositive ? "↑" : "↓";
+
 
   // Shift down when sidebar is closed
   const trendMarginTop = isSidebarOpen ? "1rem" : "3rem";
@@ -133,14 +129,11 @@ export default function VibeScoreCard({ isSidebarOpen }: VibeScoreCardProps) {
         className="flex items-center justify-center gap-2 font-semibold transition-all duration-300 ease-in-out" 
         style={{ 
           fontSize: `${trendFontSize}px`, 
-          color: trendColor,
           marginTop: trendMarginTop,
           marginBottom: '1rem'
         }}
       >
-        <span className={trendArrowSize}>{trendArrow}</span>
         <span>
-          {trendValue.toFixed(1)} vs {trendPeriod}
         </span>
       </div>
     </div>

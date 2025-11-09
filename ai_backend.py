@@ -1015,29 +1015,29 @@ def _generate_trend_data_from_chi(base_chi: float, chi_trend: float) -> list:
         List of trend data points with time and score
     """
     try:
-        # Generate 25 data points over 24 hours
-        time_points = [datetime.now() - timedelta(hours=24 - i) for i in range(25)]
+        # Generate 26 data points over 24 hours
+        time_points = [datetime.now() - timedelta(hours=24 - i) for i in range(26)]
         
         # Create trend line: start lower if trend is negative, end at base_chi
         if chi_trend > 0:
             # Positive trend: scores increase over time
-            scores = np.linspace(base_chi - abs(chi_trend) * 8, base_chi, 25)
+            scores = np.linspace(base_chi - abs(chi_trend) * 8, base_chi, 26)
         elif chi_trend < 0:
             # Negative trend: scores decrease over time
-            scores = np.linspace(base_chi + abs(chi_trend) * 8, base_chi, 25)
+            scores = np.linspace(base_chi + abs(chi_trend) * 8, base_chi, 26)
         else:
             # Stable trend: scores fluctuate around base
-            scores = base_chi + np.random.normal(0, 1, 25)
+            scores = base_chi + np.random.normal(0, 1, 26)
         
         # Add some realistic variation and ensure values are in 0-100 range
-        scores = np.clip(scores + np.random.normal(0, 0.5, 25), 0, 100)
+        scores = np.clip(scores + np.random.normal(0, 0.5, 26), 0, 100)
         
         # Convert to format expected by frontend
         return [{"time": t.strftime("%H:%M"), "score": round(float(s), 2)} for t, s in zip(time_points, scores)]
     except Exception as e:
         logger.warning(f"Error generating trend data: {e}, using simple fallback")
         # Simple fallback: constant score
-        return [{"time": (datetime.now() - timedelta(hours=24-i)).strftime("%H:%M"), "score": round(base_chi, 2)} for i in range(25)]
+        return [{"time": (datetime.now() - timedelta(hours=24-i)).strftime("%H:%M"), "score": round(base_chi, 2)} for i in range(26)]
 
 
 def generate_summary_json(output_file: str = "ai_generated_summary.json") -> Optional[Dict[str, Any]]:

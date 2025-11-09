@@ -89,6 +89,22 @@ export default function ActionableInsights() {
     return '#9CA3AF'
   };
 
+  // Sort queue items by urgency and velocity (highest first)
+  const getUrgencyPriority = (urgency: string): number => {
+    switch (urgency?.toLowerCase()) {
+      case 'critical':
+        return 4;
+      case 'high':
+        return 3;
+      case 'medium':
+        return 2;
+      case 'low':
+        return 1;
+      default:
+        return 0;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -120,6 +136,24 @@ export default function ActionableInsights() {
   if (!data) {
     return null;
   }
+
+  // Sort queue items by urgency and velocity (highest first)
+  const sortedQueue = [...data.queue].sort((a, b) => {
+    // First sort by urgency (Critical > High > Medium > Low)
+    const urgencyA = getUrgencyPriority(a.urgency || a.status);
+    const urgencyB = getUrgencyPriority(b.urgency || b.status);
+    if (urgencyA !== urgencyB) {
+      return urgencyB - urgencyA; // Higher urgency first
+    }
+    // If urgency is the same, sort by velocity (highest first)
+    const velocityA = a.velocity || 0;
+    const velocityB = b.velocity || 0;
+    if (velocityA !== velocityB) {
+      return velocityB - velocityA; // Higher velocity first
+    }
+    // If velocity is also the same, sort by time since alert (oldest first)
+    return (a.time_since_alert_h || 0) - (b.time_since_alert_h || 0);
+  });
 
   return (
     <div className="p-8 min-h-screen bg-[#1A1A1A] text-white">
@@ -194,7 +228,7 @@ export default function ActionableInsights() {
                 </tr>
               </thead>
               <tbody>
-                {data.queue.map((item) => (
+                {sortedQueue.map((item) => (
                   <tr 
                     key={item.id} 
                     className="border-b border-[#404040] hover:bg-[#3C3C3C] transition-colors"

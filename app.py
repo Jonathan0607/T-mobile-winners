@@ -142,6 +142,8 @@ def summary():
                     base["action_cards"] = ai_result["action_cards"]
                 if "competitive_summary" in ai_result and ai_result["competitive_summary"]:
                     base["competitive_summary"] = ai_result["competitive_summary"]
+                if "trend_data" in ai_result and ai_result["trend_data"]:
+                    base["trend_data"] = ai_result["trend_data"]
                 return jsonify(base)
             else:
                 logger.warning("⚠️ AI summary data returned None, using mock data")
@@ -153,9 +155,9 @@ def summary():
 
 # Helper to generate mock trend data
 def generate_trend_data():
-    time_points = [datetime.now() - timedelta(hours=24 - i) for i in range(25)]
+    time_points = [datetime.now() - timedelta(hours=24 - i) for i in range(26)]
     scores = np.clip(
-        88 + 3 * np.sin(np.linspace(0, 2 * np.pi, 25)) - np.arange(25) * 0.1,
+        88 + 3 * np.sin(np.linspace(0, 2 * np.pi, 26)) - np.arange(26) * 0.1,
         75, 95
     )
     # Convert to format Recharts prefers
