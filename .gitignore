@@ -9,9 +9,6 @@ venv/
 ENV/
 .venv
 
-# Streamlit
-.streamlit/
-
 # IDE
 .vscode/
 .idea
@@ -25,3 +22,13 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# React / Vite
+.vite/
+*.tsbuildinfo
