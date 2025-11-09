@@ -287,4 +287,84 @@ class AgenticRAG:
         )
         
         return response
+    
+    def direct_prompt(
+        self,
+        prompt: str,
+        retrieval_query: Optional[str] = None,
+        platforms: Optional[List[str]] = None,
+        top_k: int = 5,
+        system_prompt: Optional[str] = None,
+        filter_metadata: Optional[Dict] = None,
+    ) -> str:
+        """Directly prompt the RAG agent while forcing retrieval first.
+        
+        This is a convenience wrapper that:
+        1. Performs vector retrieval on the requested platforms (or all available)
+        2. Concatenates retrieved context
+        3. Sends a single chat completion to the model WITHOUT tool calling
+        
+        Args:
+            prompt: User's question.
+            retrieval_query: Query used for retrieval (defaults to the prompt).
+            platforms: List of platform keys to search (e.g. ['reddit','playstore']). If None, use all.
+            top_k: Number of results per platform.
+            system_prompt: Optional system prompt override.
+            filter_metadata: Optional metadata filters passed to each retrieval.
+        Returns:
+            Model response string.
+        """
+        if retrieval_query is None:
+            retrieval_query = prompt
+        if platforms is None:
+            # Use all known indexes; for single-db mode use 'default'
+            platforms = list(self.vector_dbs.keys())
+        # Normalize metadata filters
+        fm = filter_metadata if filter_metadata else None
+        # Collect context pieces
+        context_sections = []
+        for key in platforms:
+            if key not in self.vector_dbs:
+                continue
+            try:
+                db = self.vector_dbs[key]
+                ctx = db.retrieve_context(retrieval_query, top_k, fm)
+                header = {
+                    'reddit': 'Reddit Posts',
+                    'playstore': 'Google Play Store Reviews',
+                    'appstore': 'Apple App Store Reviews',
+                    'default': 'Social Media Posts'
+                }.get(key, key.title())
+                context_sections.append(f"[{header}]\n{ctx}")
+            except Exception as e:
+                context_sections.append(f"[{key}] Retrieval error: {e}")
+        combined_context = "\n\n".join(context_sections) if context_sections else "No context retrieved."
+        # Build system prompt
+        if system_prompt is None:
+            system_prompt = (
+                "You are an assistant analyzing user feedback from multiple sources. "
+                "Use the retrieved context below to answer the user's question. "
+                "If the context is insufficient, state what additional data would be needed."
+            )
+        final_user_prompt = (
+            f"User Question:\n{prompt}\n\nRetrieved Context:\n{combined_context}\n\n" \
+            "Provide a concise, accurate answer synthesizing the context."
+        )
+        # Prefer a simple chat call if available
+        try:
+            if hasattr(self.nemotron, 'chat'):
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": final_user_prompt}
+                ]
+                return self.nemotron.chat(messages)
+            # Fallback to tool call without tools
+            return self.nemotron.call_with_tools(
+                system_prompt=system_prompt,
+                user_prompt=final_user_prompt,
+                tools={},
+                tool_schemas=[]
+            )
+        except Exception as e:
+            return f"Error generating response: {e}"
 
