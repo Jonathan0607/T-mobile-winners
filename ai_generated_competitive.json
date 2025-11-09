@@ -1,0 +1,84 @@
+{
+  "historical_vibe_gap": [
+    {
+      "date": "11/05",
+      "T_Mobile": 48.1,
+      "ATT": 5.1,
+      "Verizon": 31.7
+    },
+    {
+      "date": "11/06",
+      "T_Mobile": 50.7,
+      "ATT": 3.8,
+      "Verizon": 32.5
+    },
+    {
+      "date": "11/07",
+      "T_Mobile": 51.7,
+      "ATT": 8.8,
+      "Verizon": 31.5
+    },
+    {
+      "date": "11/08",
+      "T_Mobile": 53.8,
+      "ATT": 8.5,
+      "Verizon": 33.4
+    },
+    {
+      "date": "11/09",
+      "T_Mobile": 53.9,
+      "ATT": 12.0,
+      "Verizon": 36.2
+    }
+  ],
+  "feature_comparison_matrix": [
+    {
+      "Feature/Service": "Network Coverage",
+      "T_Mobile": "Positive (8.5/10)",
+      "ATT": "Mixed (6.8/10)",
+      "Verizon": "Positive (9.2/10)"
+    },
+    {
+      "Feature/Service": "Pricing",
+      "T_Mobile": "Mixed (7.2/10)",
+      "ATT": "Negative (5.1/10)",
+      "Verizon": "Negative (4.8/10)"
+    },
+    {
+      "Feature/Service": "Customer Support",
+      "T_Mobile": "Mixed (6.9/10)",
+      "ATT": "Negative (4.3/10)",
+      "Verizon": "Mixed (6.5/10)"
+    },
+    {
+      "Feature/Service": "App Functionality",
+      "T_Mobile": "Mixed (6.7/10)",
+      "ATT": "Negative (3.9/10)",
+      "Verizon": "Positive (7.8/10)"
+    }
+  ],
+  "comp_weaknesses": [
+    {
+      "competitor": "Verizon",
+      "weakness": "Loyalty discount removals and billing increases",
+      "action_suggestion": "Reintroduce loyalty discounts and improve transparency in billing communication"
+    },
+    {
+      "competitor": "AT&T",
+      "weakness": "App performance issues and poor customer service",
+      "action_suggestion": "Invest in app optimization and enhance customer support training"
+    }
+  ],
+  "tmobile_critiques": [
+    {
+      "critique": "App functionality issues (e.g., misleading 'free' features, insurance problems)",
+      "source_impact": "Google Play Store (5 negative reviews), Apple App Store (4 negative reviews)",
+      "team_suggestion": "Prioritize UI/UX improvements and clarify feature pricing in-app"
+    },
+    {
+      "critique": "Employee pay cuts and unrealistic sales goals",
+      "source_impact": "Reddit (multiple neutral/neutral-negative posts)",
+      "team_suggestion": "Revise compensation structures and align sales targets with employee feedback"
+    }
+  ]
+}

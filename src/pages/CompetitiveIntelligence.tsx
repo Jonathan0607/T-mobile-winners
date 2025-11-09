@@ -152,7 +152,8 @@ export default function CompetitiveAnalysis() {
               <YAxis 
                 stroke="#9CA3AF"
                 tick={{ fill: '#9CA3AF' }}
-                domain={[75, 90]}
+                domain={['dataMin - 10', 'dataMax + 10']}
+                label={{ value: 'CHI Score', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#9CA3AF' } }}
               />
               <Tooltip 
                 contentStyle={{ 
@@ -176,18 +177,18 @@ export default function CompetitiveAnalysis() {
               <Line 
                 type="monotone" 
                 dataKey="ATT" 
-                stroke="#666666" 
+                stroke="#FFC300" 
                 strokeWidth={2}
                 name="AT&T"
-                dot={{ fill: '#666666', r: 4 }}
+                dot={{ fill: '#FFC300', r: 4 }}
               />
               <Line 
                 type="monotone" 
                 dataKey="Verizon" 
-                stroke="#666666" 
+                stroke="#CCCCCC" 
                 strokeWidth={2}
                 name="Verizon"
-                dot={{ fill: '#666666', r: 4 }}
+                dot={{ fill: '#CCCCCC', r: 4 }}
               />
             </LineChart>
           </ResponsiveContainer>

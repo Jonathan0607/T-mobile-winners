@@ -1,0 +1,151 @@
+{
+  "chi_score": 54.1,
+  "chi_trend": 0.0,
+  "trend_direction": "stable",
+  "trend_period": "Last Hour",
+  "action_cards": [
+    {
+      "id": "A101",
+      "team": "Customer Service Team",
+      "priority": "Critical",
+      "title": "Improve Customer Service Training",
+      "insight": "Multiple platforms highlight poor customer service experiences, including rigid policies, unhelpful support, and unresolved billing disputes. Training should focus on empathy, problem-solving, and policy flexibility.",
+      "color": "#D62828"
+    },
+    {
+      "id": "A102",
+      "team": "Billing/Finance Team",
+      "priority": "High",
+      "title": "Enhance Billing Transparency",
+      "insight": "App Store reviews cite confusion over lease charges, uncredited refunds, and hidden fees. Clear communication of billing terms and proactive resolution of disputes are critical.",
+      "color": "#FFC300"
+    },
+    {
+      "id": "A103",
+      "team": "Retail Operations Team",
+      "priority": "Medium",
+      "title": "Audit Store Operations",
+      "insight": "Reddit reports detail disengaged staff and procedural issues (e.g., ID verification failures). Standardized training and mystery shopper programs could improve consistency.",
+      "color": "#66B14E"
+    }
+  ],
+  "competitive_summary": [
+    {
+      "carrier": "T-Mobile",
+      "score": 54.1,
+      "color": "#E20074"
+    },
+    {
+      "carrier": "AT&T",
+      "score": 14.2,
+      "color": "#FFC300"
+    },
+    {
+      "carrier": "Verizon",
+      "score": 38.8,
+      "color": "#CCCCCC"
+    }
+  ],
+  "trend_data": [
+    {
+      "time": "09:01",
+      "score": 52.03
+    },
+    {
+      "time": "10:01",
+      "score": 54.72
+    },
+    {
+      "time": "11:01",
+      "score": 52.71
+    },
+    {
+      "time": "12:01",
+      "score": 54.23
+    },
+    {
+      "time": "13:01",
+      "score": 54.37
+    },
+    {
+      "time": "14:01",
+      "score": 53.12
+    },
+    {
+      "time": "15:01",
+      "score": 55.78
+    },
+    {
+      "time": "16:01",
+      "score": 53.61
+    },
+    {
+      "time": "17:01",
+      "score": 54.87
+    },
+    {
+      "time": "18:01",
+      "score": 55.14
+    },
+    {
+      "time": "19:01",
+      "score": 52.02
+    },
+    {
+      "time": "20:01",
+      "score": 53.42
+    },
+    {
+      "time": "21:01",
+      "score": 53.83
+    },
+    {
+      "time": "22:01",
+      "score": 54.03
+    },
+    {
+      "time": "23:01",
+      "score": 53.35
+    },
+    {
+      "time": "00:01",
+      "score": 52.73
+    },
+    {
+      "time": "01:01",
+      "score": 53.81
+    },
+    {
+      "time": "02:01",
+      "score": 56.34
+    },
+    {
+      "time": "03:01",
+      "score": 54.39
+    },
+    {
+      "time": "04:01",
+      "score": 54.61
+    },
+    {
+      "time": "05:01",
+      "score": 54.83
+    },
+    {
+      "time": "06:01",
+      "score": 53.66
+    },
+    {
+      "time": "07:01",
+      "score": 53.79
+    },
+    {
+      "time": "08:01",
+      "score": 56.47
+    },
+    {
+      "time": "09:01",
+      "score": 54.53
+    }
+  ]
+}

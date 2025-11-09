@@ -1,0 +1,90 @@
+{
+  "kpis": {
+    "critical_count": 4
+  },
+  "queue": [
+    {
+      "id": "T001",
+      "title": "Network Connectivity Failures",
+      "velocity": 9,
+      "urgency": "Critical",
+      "time_to_fix": 24
+    },
+    {
+      "id": "T002",
+      "title": "App Crashes on Login",
+      "velocity": 7,
+      "urgency": "High",
+      "time_to_fix": 12
+    },
+    {
+      "id": "T003",
+      "title": "Customer Service Response Delays",
+      "velocity": 5,
+      "urgency": "Medium",
+      "time_to_fix": 8
+    },
+    {
+      "id": "T004",
+      "title": "Billing Discrepancies",
+      "velocity": 5,
+      "urgency": "Medium",
+      "time_to_fix": 16
+    },
+    {
+      "id": "T005",
+      "title": "Scam Shield App Integration Issues",
+      "velocity": 7,
+      "urgency": "High",
+      "time_to_fix": 10
+    },
+    {
+      "id": "T006",
+      "title": "iPhone 17 Order Cancellations",
+      "velocity": 9,
+      "urgency": "Critical",
+      "time_to_fix": 24
+    },
+    {
+      "id": "T007",
+      "title": "T-Life App Functionality Errors",
+      "velocity": 5,
+      "urgency": "Medium",
+      "time_to_fix": 6
+    },
+    {
+      "id": "T008",
+      "title": "VPN Connection Instability",
+      "velocity": 7,
+      "urgency": "High",
+      "time_to_fix": 14
+    }
+  ],
+  "cause_breakdown": [
+    {
+      "name": "Network Infrastructure",
+      "value": 30,
+      "color": "#D62828"
+    },
+    {
+      "name": "Customer Service",
+      "value": 20,
+      "color": "#FFC300"
+    },
+    {
+      "name": "Product/App Issues",
+      "value": 25,
+      "color": "#3B82F6"
+    },
+    {
+      "name": "Billing System",
+      "value": 15,
+      "color": "#9CA3AF"
+    },
+    {
+      "name": "Other",
+      "value": 10,
+      "color": "#6B7280"
+    }
+  ]
+}

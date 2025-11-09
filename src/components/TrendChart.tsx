@@ -1,14 +1,43 @@
 import { useEffect, useRef, useState } from 'react';
 import Plot from 'react-plotly.js';
-import { generateTrendData } from '../data/mockData';
+
+interface TrendDataPoint {
+  time: string | Date;
+  score: number;
+}
 
 export default function TrendChart() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [chartHeight, setChartHeight] = useState(400);
   const [chartWidth, setChartWidth] = useState(0);
+  const [trendData, setTrendData] = useState<TrendDataPoint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Generate trend data
-  const trendData = generateTrendData();
+  // Fetch trend data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:5001/api/vibecheck/summary');
+        if (!response.ok) {
+          throw new Error('Failed to fetch summary data');
+        }
+        const jsonData = await response.json();
+        if (jsonData.trend_data && Array.isArray(jsonData.trend_data)) {
+          setTrendData(jsonData.trend_data);
+        }
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+        console.error('Error fetching trend data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // Update chart dimensions based on container
   useEffect(() => {
@@ -45,17 +74,33 @@ export default function TrendChart() {
     };
   }, []);
 
-  // Format time for x-axis - show hours only for cleaner display
-  const formatTime = (date: Date) => {
-    const d = new Date(date);
-    const hours = d.getHours();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHour = hours % 12 || 12;
-    return `${displayHour} ${ampm}`;
+  // Format time for x-axis - handle both string and Date objects
+  const formatTime = (time: string | Date) => {
+    if (typeof time === 'string') {
+      // If it's already formatted as "HH:MM", return as is
+      if (time.includes(':') && !time.includes('-')) {
+        return time;
+      }
+      // Otherwise try to parse it
+      const d = new Date(time);
+      if (isNaN(d.getTime())) {
+        return time; // Return original if not a valid date
+      }
+      const hours = d.getHours();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHour = hours % 12 || 12;
+      return `${displayHour} ${ampm}`;
+    } else {
+      const d = new Date(time);
+      const hours = d.getHours();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHour = hours % 12 || 12;
+      return `${displayHour} ${ampm}`;
+    }
   };
 
   // Prepare data for Plotly line chart
-  const plotlyData = [
+  const plotlyData = trendData.length > 0 ? [
     {
       x: trendData.map((d) => formatTime(d.time)),
       y: trendData.map((d) => d.score),
@@ -68,7 +113,7 @@ export default function TrendChart() {
       hovertemplate: '<b>%{x}</b><br>Score: %{y:.1f}<extra></extra>',
       name: 'CHI Score',
     },
-  ];
+  ] : [];
 
   const plotlyLayout = {
     plot_bgcolor: '#2C2C2C',
@@ -98,7 +143,10 @@ export default function TrendChart() {
       },
       gridcolor: '#404040',
       showgrid: true,
-      range: [75, 95],
+      range: trendData.length > 0 ? [
+        Math.max(0, Math.min(...trendData.map(d => d.score)) - 10),
+        Math.min(100, Math.max(...trendData.map(d => d.score)) + 10)
+      ] : [0, 100],
       tickfont: { size: 11, color: '#9CA3AF' },
       linecolor: '#555555',
       linewidth: 1,
@@ -112,6 +160,39 @@ export default function TrendChart() {
     responsive: true,
     useResizeHandler: true,
   };
+
+  if (loading) {
+    return (
+      <div className="bg-[#2C2C2C] rounded-xl p-6 w-full overflow-hidden" ref={containerRef} style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+        <h3 className="text-white text-xl font-semibold mb-4 text-center">
+          24-Hour CHI Score Trend
+        </h3>
+        <div className="text-[#9CA3AF] text-center py-8">Loading trend data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-[#2C2C2C] rounded-xl p-6 w-full overflow-hidden" ref={containerRef} style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+        <h3 className="text-white text-xl font-semibold mb-4 text-center">
+          24-Hour CHI Score Trend
+        </h3>
+        <div className="text-red-500 text-sm text-center py-8">Error: {error}</div>
+      </div>
+    );
+  }
+
+  if (trendData.length === 0) {
+    return (
+      <div className="bg-[#2C2C2C] rounded-xl p-6 w-full overflow-hidden" ref={containerRef} style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+        <h3 className="text-white text-xl font-semibold mb-4 text-center">
+          24-Hour CHI Score Trend
+        </h3>
+        <div className="text-[#9CA3AF] text-center py-8">No trend data available.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#2C2C2C] rounded-xl p-6 w-full overflow-hidden" ref={containerRef} style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>

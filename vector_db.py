@@ -30,6 +30,13 @@ logger = logging.getLogger(__name__)
 PLAYSTORE_DEFAULT_INDEX = "tmobile-playstore-reviews"
 REDDIT_DEFAULT_INDEX = "tmobile-reddit-posts"
 
+# Carrier-specific unified index names
+CARRIER_INDEX_NAMES = {
+    "tmobile": "tmobile-all-reviews",
+    "att": "att-all-reviews",
+    "verizon": "verizon-all-reviews"
+}
+
 class SocialMediaVectorDB:
     VECTOR_FIELD = "embedding"
     VECTOR_PROFILE = "my-vector-profile"
@@ -41,7 +48,8 @@ class SocialMediaVectorDB:
         endpoint: Optional[str] = None,
         api_key: Optional[str] = None,
         index_name: Optional[str] = None,
-        index_type: str = "playstore"  # or "reddit"
+        index_type: str = "playstore",  # or "reddit"
+        carrier: Optional[str] = None  # Optional carrier name (tmobile, att, verizon)
     ):
         self.endpoint = endpoint or os.getenv("AZURE_SEARCH_ENDPOINT")
         self.api_key = api_key or os.getenv("AZURE_SEARCH_API_KEY")
@@ -49,8 +57,16 @@ class SocialMediaVectorDB:
             raise ValueError("AZURE_SEARCH_ENDPOINT missing")
         if not self.api_key:
             raise ValueError("AZURE_SEARCH_API_KEY missing")
-        if index_type not in {"playstore", "reddit"}:
+        
+        # If carrier is provided, use carrier-specific unified index
+        if carrier:
+            if carrier.lower() not in CARRIER_INDEX_NAMES:
+                raise ValueError(f"carrier must be one of {list(CARRIER_INDEX_NAMES.keys())}")
+            index_name = CARRIER_INDEX_NAMES[carrier.lower()]
+            index_type = "playstore"  # Unified indexes use playstore schema
+        elif index_type not in {"playstore", "reddit"}:
             raise ValueError("index_type must be 'playstore' or 'reddit'")
+        
         self.index_type = index_type
         if not index_name:
             index_name = PLAYSTORE_DEFAULT_INDEX if index_type == "playstore" else REDDIT_DEFAULT_INDEX
@@ -173,28 +189,49 @@ class SocialMediaVectorDB:
         """Ensure the index exists, creating or updating as needed."""
         try:
             existing = self.index_client.get_index(self.index_name)
+            # Index exists - check if it has the required fields
             current_field_names = {f.name for f in existing.fields}
             required_fields = {f.name for f in (self._build_playstore_fields() if self.index_type == "playstore" else self._build_reddit_fields())}
             missing = required_fields - current_field_names
             
-            # Validate embedding field dimension (attempt both property names)
-            embedding_field = next((f for f in existing.fields if f.name == self.VECTOR_FIELD), None)
-            dim_val = None
-            if embedding_field:
-                dim_val = getattr(embedding_field, 'vector_search_dimensions', None) or getattr(embedding_field, 'dimensions', None)
-            dim_mismatch = embedding_field and dim_val != self.VECTOR_DIM
+            # Only check for critical fields (id, text, embedding)
+            critical_fields = {"id", "text", self.VECTOR_FIELD}
+            missing_critical = critical_fields - current_field_names
             
-            if missing or dim_mismatch:
-                logger.warning(f"Index '{self.index_name}' missing fields {missing} or dimension mismatch={dim_mismatch}. Recreating index.")
-                self.index_client.delete_index(self.index_name)
-                result = self.index_client.create_or_update_index(self._build_index_definition())
-                logger.info(f"✅ {result.name} created/updated")
+            if missing_critical:
+                # Critical fields are missing, but don't try to recreate if we're at quota limit
+                logger.warning(f"Index '{self.index_name}' missing critical fields {missing_critical}. Index may not work properly.")
+                logger.info(f"✅ Using existing index '{self.index_name}' (may have limitations)")
+            elif missing:
+                # Non-critical fields missing, but index is usable
+                logger.info(f"✅ Using existing index '{self.index_name}' (some optional fields missing: {missing})")
             else:
                 logger.info(f"✅ Using existing index '{self.index_name}'")
         except Exception as e:
-            logger.info(f"Creating index '{self.index_name}' (reason: {e})")
-            result = self.index_client.create_or_update_index(self._build_index_definition())
-            logger.info(f"✅ {result.name} created")
+            error_msg = str(e)
+            # Check if index doesn't exist (404) or if it's a quota issue (429)
+            if "404" in error_msg or "not found" in error_msg.lower():
+                logger.info(f"Creating index '{self.index_name}' (reason: index not found)")
+                try:
+                    result = self.index_client.create_or_update_index(self._build_index_definition())
+                    logger.info(f"✅ {result.name} created")
+                except Exception as create_error:
+                    if "429" in str(create_error) or "quota" in str(create_error).lower():
+                        logger.warning(f"⚠️ Cannot create index '{self.index_name}': Quota exceeded. Please use existing indexes or upgrade your Azure plan.")
+                        raise
+                    else:
+                        raise
+            elif "429" in error_msg or "quota" in error_msg.lower():
+                logger.warning(f"⚠️ Cannot create index '{self.index_name}': Quota exceeded. Index may already exist - trying to use it.")
+                # Try to use the index anyway - it might exist but we can't verify due to quota
+                try:
+                    # Just verify we can access it
+                    self.search_client.get_document_count()
+                    logger.info(f"✅ Index '{self.index_name}' is accessible")
+                except:
+                    raise ValueError(f"Cannot access index '{self.index_name}' and cannot create new one due to quota limits")
+            else:
+                raise
 
     def _log_diagnostics(self):
         """Log diagnostic information about the index."""

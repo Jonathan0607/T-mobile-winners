@@ -2,4 +2,8 @@ Flask==3.0.0
 flask-cors==4.0.0
 pandas==2.1.4
 numpy==1.26.2
+azure-search-documents==11.6.0
+azure-identity==1.25.1
+sentence-transformers>=2.2.0
+python-dotenv>=1.0.0
 

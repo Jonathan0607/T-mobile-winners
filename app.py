@@ -4,12 +4,37 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import os
-from ai_backend import initialize_ai, ai_vibe_report, ai_competitive_summary, ai_triage_insights, ai_summary, ai_chi_score_estimate
+import logging
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # python-dotenv not installed, skip
+
+# Import AI backend functions
+try:
+    from ai_backend import (
+        initialize_ai,
+        get_ai_vibe_report_data,
+        get_ai_competitive_data,
+        get_ai_triage_data,
+        get_ai_summary_data
+    )
+    AI_BACKEND_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: AI backend not available: {e}")
+    AI_BACKEND_AVAILABLE = False
 
 # --- Initialization and Configuration ---
 app = Flask(__name__)
 # IMPORTANT: CORS is needed to allow your React frontend (on a different port) to fetch data from Flask.
 CORS(app) 
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # --- Mock Data Generation (Simplified Structures for Hackathon) ---
 
@@ -20,53 +45,109 @@ HIGH_YELLOW = "#FFC300"
 
 # Decide whether to enable AI endpoints (env var)
 AI_ENABLED = os.getenv("ENABLE_AI_BACKEND", "0") == "1"
-if AI_ENABLED:
-    initialize_ai()
+if AI_ENABLED and AI_BACKEND_AVAILABLE:
+    if initialize_ai():
+        logger.info("✅ AI backend initialized successfully")
+    else:
+        logger.warning("⚠️ AI backend initialization failed, will use mock data")
+        AI_ENABLED = False
+else:
+    logger.info("ℹ️ AI backend disabled or not available, using mock data")
 
 @app.route('/api/vibecheck/vibe_report', methods=['GET'])
 def vibe_report():
     """Returns data for the Vibe Report: Internal Analysis page."""
-    if AI_ENABLED:
-        ai_result = ai_vibe_report()
-        if ai_result:
-            return jsonify(ai_result)
-        # fallback to mock if agent fails
+    if AI_ENABLED and AI_BACKEND_AVAILABLE:
+        try:
+            ai_result = get_ai_vibe_report_data()
+            if ai_result:
+                logger.info("✅ Using AI-generated vibe report data")
+                return jsonify(ai_result)
+            else:
+                logger.warning("⚠️ AI vibe report returned None, using mock data")
+        except Exception as e:
+            logger.error(f"❌ Error getting AI vibe report: {e}")
+            # Fall through to mock data
     return jsonify(get_vibe_report_data())
 
 @app.route('/api/vibecheck/competitive', methods=['GET'])
 def competitive():
     """Returns data for the detailed Competitive Intelligence page."""
-    if AI_ENABLED:
-        ai_result = ai_competitive_summary()
-        if ai_result:
-            return jsonify(ai_result)
+    if AI_ENABLED and AI_BACKEND_AVAILABLE:
+        try:
+            ai_result = get_ai_competitive_data()
+            if ai_result:
+                logger.info("✅ Using AI-generated competitive data")
+                return jsonify(ai_result)
+            else:
+                logger.warning("⚠️ AI competitive data returned None, using mock data")
+        except Exception as e:
+            logger.error(f"❌ Error getting AI competitive data: {e}")
+            # Fall through to mock data
     return jsonify(get_competitive_data())
 
 @app.route('/api/vibecheck/triage_queue', methods=['GET'])
 def triage_queue():
     """Returns data for the Actionable Insights page."""
-    if AI_ENABLED:
-        ai_result = ai_triage_insights()
-        if ai_result:
-            return jsonify(ai_result)
+    if AI_ENABLED and AI_BACKEND_AVAILABLE:
+        try:
+            ai_result = get_ai_triage_data()
+            if ai_result:
+                logger.info("✅ Using AI-generated triage data")
+                # Ensure all queue items have urgency and time_to_fix fields
+                if "queue" in ai_result:
+                    for item in ai_result["queue"]:
+                        if "urgency" not in item:
+                            # Calculate urgency from velocity if not present
+                            velocity = item.get("velocity", 0)
+                            if velocity >= 8.0:
+                                item["urgency"] = "Critical"
+                            elif velocity >= 6.0:
+                                item["urgency"] = "High"
+                            elif velocity >= 4.0:
+                                item["urgency"] = "Medium"
+                            else:
+                                item["urgency"] = "Low"
+                        if "time_to_fix" not in item:
+                            # Use time_since_alert_h as fallback
+                            item["time_to_fix"] = item.get("time_since_alert_h", 0)
+                return jsonify(ai_result)
+            else:
+                logger.warning("⚠️ AI triage data returned None, using mock data")
+        except Exception as e:
+            logger.error(f"❌ Error getting AI triage data: {e}")
+            # Fall through to mock data
     return jsonify(get_triage_queue_data())
 
 @app.route('/api/vibecheck/summary', methods=['GET'])
 def summary():
     """Returns data for the main Home/All Teams page."""
-    if AI_ENABLED:
-        # Combine AI CHI estimate + short summary and competitive snapshot
-        chi = ai_chi_score_estimate()
-        summ = ai_summary()
-        if chi or summ:
-            # Merge with mock as needed to ensure frontend always gets expected keys
-            base = get_summary_data()
-            if chi and "chi_score" in chi:
-                base["chi_score"] = chi.get("chi_score", base["chi_score"])
-                base["chi_trend"] = chi.get("chi_trend", base.get("chi_trend"))
-            if summ and "summary" in summ:
-                base["ai_summary"] = summ
-            return jsonify(base)
+    if AI_ENABLED and AI_BACKEND_AVAILABLE:
+        try:
+            ai_result = get_ai_summary_data()
+            if ai_result:
+                logger.info("✅ Using AI-generated summary data")
+                # Merge with mock data to ensure all required fields are present
+                base = get_summary_data()
+                # Update with AI data where available
+                if "chi_score" in ai_result:
+                    base["chi_score"] = ai_result.get("chi_score", base["chi_score"])
+                if "chi_trend" in ai_result:
+                    base["chi_trend"] = ai_result.get("chi_trend", base["chi_trend"])
+                if "trend_direction" in ai_result:
+                    base["trend_direction"] = ai_result.get("trend_direction", base["trend_direction"])
+                if "trend_period" in ai_result:
+                    base["trend_period"] = ai_result.get("trend_period", "Last Hour")
+                if "action_cards" in ai_result and ai_result["action_cards"]:
+                    base["action_cards"] = ai_result["action_cards"]
+                if "competitive_summary" in ai_result and ai_result["competitive_summary"]:
+                    base["competitive_summary"] = ai_result["competitive_summary"]
+                return jsonify(base)
+            else:
+                logger.warning("⚠️ AI summary data returned None, using mock data")
+        except Exception as e:
+            logger.error(f"❌ Error getting AI summary data: {e}")
+            # Fall through to mock data
     return jsonify(get_summary_data())
 # ...existing code...
 
@@ -86,6 +167,7 @@ def get_summary_data():
         "chi_score": 85.2,
         "chi_trend": -1.5,
         "trend_direction": "down",
+        "trend_period": "Last Hour",
         "trend_data": generate_trend_data(),
         "action_cards": [
             {
@@ -173,105 +255,120 @@ def get_vibe_report_data():
     }
 
 
-# --- API Endpoints ---
-
-@app.route('/api/vibecheck/summary', methods=['GET'])
-def summary():
-    """Returns data for the main Home/All Teams page."""
-    return jsonify(get_summary_data())
-
-@app.route('/api/vibecheck/competitive', methods=['GET'])
-def competitive():
-    """Returns data for the detailed Competitive Intelligence page."""
-    return jsonify(get_competitive_data())
-
-@app.route('/api/vibecheck/vibe_report', methods=['GET'])
-def vibe_report():
-    """Returns data for the Vibe Report: Internal Analysis page."""
-    return jsonify(get_vibe_report_data())
-
 # Actionable Insights / Triage Queue Data
 def get_triage_queue_data():
+    # Helper function to determine urgency based on velocity and status
+    def get_urgency(velocity, status):
+        if status == "Resolved":
+            return "Low"
+        if velocity >= 8.0:
+            return "Critical"
+        elif velocity >= 6.0:
+            return "High"
+        elif velocity >= 4.0:
+            return "Medium"
+        else:
+            return "Low"
+    
+    # Helper function to calculate time to fix (estimated based on velocity and time since alert)
+    def get_time_to_fix(velocity, time_since_alert_h, status):
+        if status == "Resolved":
+            return time_since_alert_h  # Use actual resolution time
+        # Estimate based on velocity: higher velocity = more urgent = faster fix needed
+        # Base estimate: 24 hours, reduced by velocity factor
+        base_time = 24.0
+        velocity_factor = max(0.3, 1.0 - (velocity / 10.0))
+        estimated_time = base_time * velocity_factor
+        # Add time since alert to get total estimated time
+        return time_since_alert_h + estimated_time
+    
+    queue_items = [
+        {
+            "id": "T001",
+            "title": "5G Network Outage - Miami Metro Area",
+            "velocity": 9.2,
+            "time_since_alert_h": 2.3,
+            "status": "New",
+            "owner_team": "Network Engineering",
+            "resolution_summary": None
+        },
+        {
+            "id": "T002",
+            "title": "Customer Service Response Time Spike",
+            "velocity": 7.8,
+            "time_since_alert_h": 5.1,
+            "status": "In Progress",
+            "owner_team": "Customer Support",
+            "resolution_summary": None
+        },
+        {
+            "id": "T003",
+            "title": "Billing System Integration Error",
+            "velocity": 6.5,
+            "time_since_alert_h": 1.2,
+            "status": "New",
+            "owner_team": "IT Operations",
+            "resolution_summary": None
+        },
+        {
+            "id": "T004",
+            "title": "App Store Review Score Decline",
+            "velocity": 8.9,
+            "time_since_alert_h": 3.7,
+            "status": "In Progress",
+            "owner_team": "Product Team",
+            "resolution_summary": None
+        },
+        {
+            "id": "T005",
+            "title": "Data Plan Confusion - Customer Complaints",
+            "velocity": 5.2,
+            "time_since_alert_h": 0.8,
+            "status": "Resolved",
+            "owner_team": "Marketing",
+            "resolution_summary": "Clarified plan details on website and updated customer-facing documentation."
+        },
+        {
+            "id": "T006",
+            "title": "Rural Coverage Gap - Montana Region",
+            "velocity": 4.8,
+            "time_since_alert_h": 6.2,
+            "status": "In Progress",
+            "owner_team": "Network Engineering",
+            "resolution_summary": None
+        },
+        {
+            "id": "T007",
+            "title": "International Roaming Charges Issue",
+            "velocity": 7.1,
+            "time_since_alert_h": 2.9,
+            "status": "Resolved",
+            "owner_team": "Billing",
+            "resolution_summary": "Fixed calculation error in roaming charge algorithm. Refunds processed for affected customers."
+        },
+        {
+            "id": "T008",
+            "title": "Device Trade-In Program Delay",
+            "velocity": 5.9,
+            "time_since_alert_h": 4.5,
+            "status": "Resolved",
+            "owner_team": "Operations",
+            "resolution_summary": "Streamlined trade-in process and added additional processing capacity."
+        }
+    ]
+    
+    # Add urgency and time_to_fix to each item
+    for item in queue_items:
+        item["urgency"] = get_urgency(item["velocity"], item["status"])
+        item["time_to_fix"] = get_time_to_fix(item["velocity"], item["time_since_alert_h"], item["status"])
+    
     return {
         "kpis": {
             "critical_count": 12,
             "mttr_h": 3.5,
             "resolved_24h": 28
         },
-        "queue": [
-            {
-                "id": "T001",
-                "title": "5G Network Outage - Miami Metro Area",
-                "velocity": 9.2,
-                "time_since_alert_h": 2.3,
-                "status": "New",
-                "owner_team": "Network Engineering",
-                "resolution_summary": None
-            },
-            {
-                "id": "T002",
-                "title": "Customer Service Response Time Spike",
-                "velocity": 7.8,
-                "time_since_alert_h": 5.1,
-                "status": "In Progress",
-                "owner_team": "Customer Support",
-                "resolution_summary": None
-            },
-            {
-                "id": "T003",
-                "title": "Billing System Integration Error",
-                "velocity": 6.5,
-                "time_since_alert_h": 1.2,
-                "status": "New",
-                "owner_team": "IT Operations",
-                "resolution_summary": None
-            },
-            {
-                "id": "T004",
-                "title": "App Store Review Score Decline",
-                "velocity": 8.9,
-                "time_since_alert_h": 3.7,
-                "status": "In Progress",
-                "owner_team": "Product Team",
-                "resolution_summary": None
-            },
-            {
-                "id": "T005",
-                "title": "Data Plan Confusion - Customer Complaints",
-                "velocity": 5.2,
-                "time_since_alert_h": 0.8,
-                "status": "Resolved",
-                "owner_team": "Marketing",
-                "resolution_summary": "Clarified plan details on website and updated customer-facing documentation."
-            },
-            {
-                "id": "T006",
-                "title": "Rural Coverage Gap - Montana Region",
-                "velocity": 4.8,
-                "time_since_alert_h": 6.2,
-                "status": "In Progress",
-                "owner_team": "Network Engineering",
-                "resolution_summary": None
-            },
-            {
-                "id": "T007",
-                "title": "International Roaming Charges Issue",
-                "velocity": 7.1,
-                "time_since_alert_h": 2.9,
-                "status": "Resolved",
-                "owner_team": "Billing",
-                "resolution_summary": "Fixed calculation error in roaming charge algorithm. Refunds processed for affected customers."
-            },
-            {
-                "id": "T008",
-                "title": "Device Trade-In Program Delay",
-                "velocity": 5.9,
-                "time_since_alert_h": 4.5,
-                "status": "Resolved",
-                "owner_team": "Operations",
-                "resolution_summary": "Streamlined trade-in process and added additional processing capacity."
-            }
-        ],
+        "queue": queue_items,
         "cause_breakdown": [
             {"name": "Network Infrastructure", "value": 35, "color": CRITICAL_RED},
             {"name": "Customer Service", "value": 25, "color": "#FFC300"},
@@ -280,11 +377,6 @@ def get_triage_queue_data():
             {"name": "Other", "value": 5, "color": "#6B7280"}
         ]
     }
-
-@app.route('/api/vibecheck/triage_queue', methods=['GET'])
-def triage_queue():
-    """Returns data for the Actionable Insights page."""
-    return jsonify(get_triage_queue_data())
 
 @app.route('/api/vibecheck/chat', methods=['POST'])
 def chat():

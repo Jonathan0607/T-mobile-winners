@@ -1,0 +1,113 @@
+{
+  "sentiment_polarity": [
+    {
+      "name": "Positive",
+      "value": 45,
+      "color": "#4CAF50"
+    },
+    {
+      "name": "Neutral",
+      "value": 30,
+      "color": "#607D8B"
+    },
+    {
+      "name": "Negative",
+      "value": 25,
+      "color": "#F44336"
+    }
+  ],
+  "sentiment_by_source": [
+    {
+      "source": "Reddit",
+      "Positive": 120,
+      "Neutral": 80,
+      "Negative": 100
+    },
+    {
+      "source": "Google Play",
+      "Positive": 200,
+      "Neutral": 50,
+      "Negative": 70
+    },
+    {
+      "source": "Apple App Store",
+      "Positive": 150,
+      "Neutral": 40,
+      "Negative": 60
+    }
+  ],
+  "top_topics": [
+    {
+      "topic": "Battery Life",
+      "volume": 85,
+      "nss": -30
+    },
+    {
+      "topic": "User Interface",
+      "volume": 70,
+      "nss": 40
+    },
+    {
+      "topic": "Customer Support",
+      "volume": 60,
+      "nss": -50
+    },
+    {
+      "topic": "App Performance",
+      "volume": 90,
+      "nss": 20
+    },
+    {
+      "topic": "Price",
+      "volume": 50,
+      "nss": -20
+    },
+    {
+      "topic": "Camera Quality",
+      "volume": 65,
+      "nss": 60
+    },
+    {
+      "topic": "Storage Capacity",
+      "volume": 55,
+      "nss": 10
+    },
+    {
+      "topic": "Connectivity",
+      "volume": 40,
+      "nss": -15
+    }
+  ],
+  "delight_feed": [
+    {
+      "snippet": "The new UI is so intuitive and fast!",
+      "source": "Google Play",
+      "emotion": "Joy"
+    },
+    {
+      "snippet": "Battery lasts all day with heavy use!",
+      "source": "Reddit",
+      "emotion": "Satisfaction"
+    },
+    {
+      "snippet": "Camera takes amazing low-light photos!",
+      "source": "Apple App Store",
+      "emotion": "Amazement"
+    },
+    {
+      "snippet": "Support team resolved my issue in minutes!",
+      "source": "Reddit",
+      "emotion": "Relief"
+    },
+    {
+      "snippet": "Smooth transitions and no lag at all!",
+      "source": "Google Play",
+      "emotion": "Delight"
+    },
+    {
+      "snippet": "Best value for money I've spent!",
+      "source": "Apple App Store",
+      "emotion": "Gratitude"
+    }
+  ]
+}

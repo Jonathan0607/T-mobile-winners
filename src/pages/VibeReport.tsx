@@ -119,15 +119,28 @@ export default function VibeReport() {
   }
 
   if (!data) {
-    return null;
+    return (
+      <div className="p-8 min-h-screen bg-[#1A1A1A] text-white">
+        <h1 className="text-3xl font-bold mb-8 ml-8">Vibe Report: Internal Analysis</h1>
+        <div className="bg-[#2C2C2C] rounded-xl p-6">
+          <div className="text-[#9CA3AF] text-center">No data available.</div>
+        </div>
+      </div>
+    );
   }
 
+  // Validate data structure and provide safe defaults
+  const sentimentPolarity = Array.isArray(data.sentiment_polarity) ? data.sentiment_polarity : [];
+  const sentimentBySource = Array.isArray(data.sentiment_by_source) ? data.sentiment_by_source : [];
+  const topTopics = Array.isArray(data.top_topics) ? data.top_topics : [];
+  const delightFeed = Array.isArray(data.delight_feed) ? data.delight_feed : [];
+
   // Prepare data for stacked bar chart
-  const barChartData = data.sentiment_by_source.map(item => ({
-    source: item.source,
-    Positive: item.Positive,
-    Neutral: item.Neutral,
-    Negative: item.Negative,
+  const barChartData = sentimentBySource.map(item => ({
+    source: item.source || 'Unknown',
+    Positive: item.Positive || 0,
+    Neutral: item.Neutral || 0,
+    Negative: item.Negative || 0,
   }));
 
   return (
@@ -142,7 +155,7 @@ export default function VibeReport() {
           <ResponsiveContainer width="100%" height={350}>
             <PieChart>
               <Pie
-                data={data.sentiment_polarity as any}
+                data={sentimentPolarity as any}
                 cx="50%"
                 cy="50%"
                 labelLine={true}
@@ -155,8 +168,8 @@ export default function VibeReport() {
                 fill="#8884d8"
                 dataKey="value"
               >
-                {data.sentiment_polarity.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                {sentimentPolarity.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color || "#8884d8"} />
                 ))}
               </Pie>
               <Tooltip 
@@ -238,21 +251,27 @@ export default function VibeReport() {
                 </tr>
               </thead>
               <tbody>
-                {data.top_topics.map((topic, index) => (
-                  <tr 
-                    key={index} 
-                    className="border-b border-[#404040] hover:bg-[#3C3C3C] transition-colors"
-                  >
-                    <td className="py-3 px-4 text-[#CCCCCC] font-medium">{topic.topic}</td>
-                    <td className="py-3 px-4 text-[#CCCCCC] text-center">{topic.volume.toLocaleString()}</td>
-                    <td 
-                      className="py-3 px-4 font-semibold text-center" 
-                      style={{ color: getNSSColor(topic.nss) }}
+                {topTopics.length > 0 ? (
+                  topTopics.map((topic, index) => (
+                    <tr 
+                      key={index} 
+                      className="border-b border-[#404040] hover:bg-[#3C3C3C] transition-colors"
                     >
-                      {topic.nss}
-                    </td>
+                      <td className="py-3 px-4 text-[#CCCCCC] font-medium">{topic.topic || 'Unknown'}</td>
+                      <td className="py-3 px-4 text-[#CCCCCC] text-center">{(topic.volume || 0).toLocaleString()}</td>
+                      <td 
+                        className="py-3 px-4 font-semibold text-center" 
+                        style={{ color: getNSSColor(topic.nss || 0) }}
+                      >
+                        {topic.nss || 0}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={3} className="py-3 px-4 text-center text-[#9CA3AF]">No topic data available</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -264,18 +283,22 @@ export default function VibeReport() {
         <div className="bg-[#2C2C2C] rounded-xl p-6">
           <h2 className="text-2xl font-semibold mb-4">Moments of Delight (Top Positive Feedback)</h2>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {data.delight_feed.map((item, index) => (
-              <div 
-                key={index}
-                className="border-2 border-[#E20074] rounded-lg p-4 bg-[#1A1A1A]"
-              >
-                <p className="text-white mb-2 text-sm">{item.snippet}</p>
-                <div className="flex items-center justify-between mt-3">
-                  <span className="text-xs text-[#9CA3AF]">{item.source}</span>
-                  <span className="text-xs text-[#E20074] font-semibold">{item.emotion}</span>
+            {delightFeed.length > 0 ? (
+              delightFeed.map((item, index) => (
+                <div 
+                  key={index}
+                  className="border-2 border-[#E20074] rounded-lg p-4 bg-[#1A1A1A]"
+                >
+                  <p className="text-white mb-2 text-sm">{item.snippet || 'No snippet available'}</p>
+                  <div className="flex items-center justify-between mt-3">
+                    <span className="text-xs text-[#9CA3AF]">{item.source || 'Unknown'}</span>
+                    <span className="text-xs text-[#E20074] font-semibold">{item.emotion || 'Positive'}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div className="col-span-3 text-center text-[#9CA3AF] py-8">No delight feed data available</div>
+            )}
           </div>
         </div>
       </div>
