@@ -3,6 +3,8 @@ from flask_cors import CORS
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
+import os
+from ai_backend import initialize_ai, ai_vibe_report, ai_competitive_summary, ai_triage_insights, ai_summary, ai_chi_score_estimate
 
 # --- Initialization and Configuration ---
 app = Flask(__name__)
@@ -15,6 +17,58 @@ CORS(app)
 MAGENTA = "#E20074"
 CRITICAL_RED = "#D62828"
 HIGH_YELLOW = "#FFC300"
+
+# Decide whether to enable AI endpoints (env var)
+AI_ENABLED = os.getenv("ENABLE_AI_BACKEND", "0") == "1"
+if AI_ENABLED:
+    initialize_ai()
+
+@app.route('/api/vibecheck/vibe_report', methods=['GET'])
+def vibe_report():
+    """Returns data for the Vibe Report: Internal Analysis page."""
+    if AI_ENABLED:
+        ai_result = ai_vibe_report()
+        if ai_result:
+            return jsonify(ai_result)
+        # fallback to mock if agent fails
+    return jsonify(get_vibe_report_data())
+
+@app.route('/api/vibecheck/competitive', methods=['GET'])
+def competitive():
+    """Returns data for the detailed Competitive Intelligence page."""
+    if AI_ENABLED:
+        ai_result = ai_competitive_summary()
+        if ai_result:
+            return jsonify(ai_result)
+    return jsonify(get_competitive_data())
+
+@app.route('/api/vibecheck/triage_queue', methods=['GET'])
+def triage_queue():
+    """Returns data for the Actionable Insights page."""
+    if AI_ENABLED:
+        ai_result = ai_triage_insights()
+        if ai_result:
+            return jsonify(ai_result)
+    return jsonify(get_triage_queue_data())
+
+@app.route('/api/vibecheck/summary', methods=['GET'])
+def summary():
+    """Returns data for the main Home/All Teams page."""
+    if AI_ENABLED:
+        # Combine AI CHI estimate + short summary and competitive snapshot
+        chi = ai_chi_score_estimate()
+        summ = ai_summary()
+        if chi or summ:
+            # Merge with mock as needed to ensure frontend always gets expected keys
+            base = get_summary_data()
+            if chi and "chi_score" in chi:
+                base["chi_score"] = chi.get("chi_score", base["chi_score"])
+                base["chi_trend"] = chi.get("chi_trend", base.get("chi_trend"))
+            if summ and "summary" in summ:
+                base["ai_summary"] = summ
+            return jsonify(base)
+    return jsonify(get_summary_data())
+# ...existing code...
 
 # Helper to generate mock trend data
 def generate_trend_data():
