@@ -1,9 +1,11 @@
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+  currentPage: 'home' | 'competitive';
+  onPageChange: (page: 'home' | 'competitive') => void;
 }
 
-export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
+export default function Sidebar({ isOpen, onToggle, currentPage, onPageChange }: SidebarProps) {
   // Logo is served from public folder - Vite serves files in public/ from root
   // Using tmobile_logo.png from the root directory
   const logoSrc = '/tmobile_logo.png';
@@ -44,8 +46,25 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
           {/* Navigation Links */}
           <nav className="space-y-2">
-            <div className="bg-[#E20074] text-white px-4 py-3 rounded-md text-base font-semibold">
-              Home Page
+            <div
+              onClick={() => onPageChange('home')}
+              className={`px-4 py-3 rounded-md text-base font-semibold transition-colors cursor-pointer ${
+                currentPage === 'home'
+                  ? 'bg-[#E20074] text-white'
+                  : 'text-[#CCCCCC] hover:bg-[#3C3C3C]'
+              }`}
+            >
+              Home
+            </div>
+            <div
+              onClick={() => onPageChange('competitive')}
+              className={`px-4 py-3 rounded-md text-base font-semibold transition-colors cursor-pointer ${
+                currentPage === 'competitive'
+                  ? 'bg-[#E20074] text-white'
+                  : 'text-[#CCCCCC] hover:bg-[#3C3C3C]'
+              }`}
+            >
+              Competitive Analysis
             </div>
             <div className="text-[#CCCCCC] px-4 py-3 rounded-md text-base font-medium hover:bg-[#3C3C3C] transition-colors cursor-pointer">
               🔧 Network Engineering
