@@ -1,12 +1,12 @@
 """
 Multi-Agent System implementation using sequential Nemotron calls.
 Implements: Research Agent → Outline Agent → Writer Agent → Editor Agent
-Supports querying from multiple Azure Cognitive Search indexes.
+Supports querying from multiple unified carrier indexes (each containing Reddit, Play Store, App Store).
 """
 
 from nemotron_client import NemotronClient
 from agentic_rag import AgenticRAG
-from vector_db import SocialMediaVectorDB
+from vector_db import SocialMediaVectorDB, CARRIER_INDEX_NAMES
 from typing import Dict, Optional
 import os
 
@@ -15,7 +15,8 @@ class MultiAgentSystem:
     """
     Multi-agent system for generating comprehensive service improvement reports.
     Uses specialized agent roles with sequential execution.
-    Supports multiple Azure indexes for different platforms.
+    Supports multiple unified carrier indexes (T-Mobile, Verizon, AT&T).
+    Each carrier index contains data from Reddit, Google Play Store, and Apple App Store.
     """
     
     def __init__(
@@ -30,7 +31,7 @@ class MultiAgentSystem:
         Args:
             nemotron_client: Initialized Nemotron client
             agentic_rag: Optional initialized Agentic RAG system (if None, will be created from vector_dbs)
-            vector_dbs: Optional dict of vector databases {'reddit': reddit_db, 'playstore': playstore_db}
+            vector_dbs: Optional dict of vector databases {'tmobile': tmobile_db, 'verizon': verizon_db, 'att': att_db}
                        Used only if agentic_rag is None
         """
         self.nemotron = nemotron_client
@@ -44,7 +45,10 @@ class MultiAgentSystem:
             self.agentic_rag = self._auto_initialize_rag()
     
     def _auto_initialize_rag(self) -> AgenticRAG:
-        """Auto-initialize RAG system with both indexes if Azure credentials are available."""
+        """
+        Auto-initialize RAG system with unified carrier indexes if Azure credentials are available.
+        Each carrier index contains data from Reddit, Play Store, and App Store.
+        """
         endpoint = os.getenv("AZURE_SEARCH_ENDPOINT")
         api_key = os.getenv("AZURE_SEARCH_API_KEY")
         
@@ -56,33 +60,24 @@ class MultiAgentSystem:
         
         vector_dbs = {}
         
-        try:
-            # Try to initialize Reddit index
-            reddit_db = SocialMediaVectorDB(
-                endpoint=endpoint,
-                api_key=api_key,
-                index_type="reddit"
-            )
-            vector_dbs['reddit'] = reddit_db
-            print("✅ Reddit index initialized")
-        except Exception as e:
-            print(f"⚠️ Reddit index not available: {e}")
-        
-        try:
-            # Try to initialize Play Store index
-            playstore_db = SocialMediaVectorDB(
-                endpoint=endpoint,
-                api_key=api_key,
-                index_type="playstore"
-            )
-            vector_dbs['playstore'] = playstore_db
-            print("✅ Play Store index initialized")
-        except Exception as e:
-            print(f"⚠️ Play Store index not available: {e}")
+        # Try to initialize each carrier's unified index
+        for carrier in ['tmobile', 'verizon', 'att']:
+            try:
+                db = SocialMediaVectorDB(
+                    endpoint=endpoint,
+                    api_key=api_key,
+                    carrier=carrier
+                )
+                doc_count = db.search_client.get_document_count()
+                vector_dbs[carrier] = db
+                print(f"✅ {carrier.upper()} unified index initialized ({doc_count} documents)")
+            except Exception as e:
+                print(f"⚠️ {carrier.upper()} index not available: {e}")
         
         if not vector_dbs:
-            raise ValueError("No vector databases could be initialized")
+            raise ValueError("No carrier indexes could be initialized")
         
+        print(f"\n📊 Total carriers initialized: {len(vector_dbs)}")
         return AgenticRAG(self.nemotron, vector_dbs)
     
     def generate_report(self, user_query: str, verbose: bool = True) -> Dict[str, str]:
@@ -336,7 +331,7 @@ Ensure all platform attributions are accurate.
         
         return self.nemotron.call(system_prompt, user_prompt, temperature=0.2, max_tokens=2048)
     
-def research_query(self, user_query: str, verbose: bool = False) -> str:
+    def research_query(self, user_query: str, verbose: bool = False) -> str:
         """
         Public method to execute research query using the research agent.
         Returns research summary text that can be used for data extraction.
