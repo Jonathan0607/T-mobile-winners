@@ -85,9 +85,8 @@ export default function ActionableInsights() {
     }
   };
 
-  const getTimeToFixColor = (time: number): string => {
-    
-    return '#9CA3AF'; // Green
+  const getTimeToFixColor = (): string => {
+    return '#9CA3AF'
   };
 
   if (loading) {
@@ -203,7 +202,7 @@ export default function ActionableInsights() {
                     <td className="py-3 px-4 text-[#CCCCCC] font-medium">{item.title}</td>
                     <td 
                       className="py-3 px-4 text-center font-semibold"
-                      style={{ color: getTimeToFixColor(item.time_to_fix || item.time_since_alert_h) }}
+                      style={{ color: getTimeToFixColor() }}
                     >
                       {(item.time_to_fix || item.time_since_alert_h).toFixed(1)}
                     </td>
