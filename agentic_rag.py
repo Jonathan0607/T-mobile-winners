@@ -8,6 +8,7 @@ from nemotron_client import NemotronClient
 from vector_db import SocialMediaVectorDB
 from typing import Dict, Optional, List, Union
 import json
+import re
 
 
 class AgenticRAG:
@@ -374,19 +375,37 @@ class AgenticRAG:
             f"User Question:\n{prompt}\n\nRetrieved Context:\n{combined_context}\n\n" \
             "Provide a synthesized answer."
         )
+        def _clean_response(text: str) -> str:
+            """Remove reasoning tags from Nemotron response."""
+            if not text:
+                return text
+            # Remove <think>...</think> and similar tags
+            text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL | re.IGNORECASE)
+            text = re.sub(r'<thinking>.*?</thinking>', '', text, flags=re.DOTALL | re.IGNORECASE)
+            text = re.sub(r'<reasoning>.*?</reasoning>', '', text, flags=re.DOTALL | re.IGNORECASE)
+            text = re.sub(r'<thought>.*?</thought>', '', text, flags=re.DOTALL | re.IGNORECASE)
+            # Clean up extra whitespace
+            text = re.sub(r'\n\s*\n\s*\n', '\n\n', text)
+            return text.strip()
+        
         try:
-            if hasattr(self.nemotron, 'chat'):
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": final_user_prompt}
-                ]
-                return self.nemotron.chat(messages)
-            return self.nemotron.call_with_tools(
-                system_prompt=system_prompt,
-                user_prompt=final_user_prompt,
-                tools={},
-                tool_schemas=[]
-            )
+            # Use chat method for cleaner interface (now available in NemotronClient)
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": final_user_prompt}
+            ]
+            raw_response = self.nemotron.chat(messages)
+            return _clean_response(raw_response)
         except Exception as e:
-            return f"Error generating response: {e}"
+            # Fallback to call method if chat fails
+            try:
+                raw_response = self.nemotron.call(
+                    system_prompt=system_prompt,
+                    user_prompt=final_user_prompt,
+                    temperature=0.2,
+                    max_tokens=2048
+                )
+                return _clean_response(raw_response)
+            except Exception as e2:
+                return f"Error generating response: {str(e)}. Fallback error: {str(e2)}"
 

@@ -122,7 +122,7 @@ export default function TrendChart() {
     margin: { l: 60, r: 60, t: 30, b: 80 },
     height: chartHeight,
     width: chartWidth > 0 ? chartWidth : undefined,
-    autosize: chartWidth === 0, // Use autosize until we have width
+    autosize: chartWidth === 0, 
     xaxis: {
       title: {
         text: 'Time (Last 24 Hours)',
@@ -144,7 +144,7 @@ export default function TrendChart() {
       gridcolor: '#404040',
       showgrid: true,
       range: trendData.length > 0 ? [
-        Math.max(0, Math.min(...trendData.map(d => d.score)) - 10),
+        0, // <-- CHANGE THIS: Force the axis to start at 0
         Math.min(100, Math.max(...trendData.map(d => d.score)) + 10)
       ] : [0, 100],
       tickfont: { size: 11, color: '#9CA3AF' },

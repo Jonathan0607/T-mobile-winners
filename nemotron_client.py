@@ -193,4 +193,39 @@ class NemotronClient:
             if m.get("role") == "assistant" and m.get("content"):
                 return m["content"]
         return "Maximum iterations reached"
+    
+    def chat(self, messages: List[Dict]) -> str:
+        """
+        Chat interface compatible with OpenAI-style message format.
+        
+        Args:
+            messages: List of message dicts with 'role' and 'content' keys
+                     Example: [{"role": "system", "content": "..."}, {"role": "user", "content": "..."}]
+        
+        Returns:
+            Generated text response from Nemotron
+        """
+        # Extract system and user prompts from messages
+        system_prompt = ""
+        user_prompt = ""
+        
+        for msg in messages:
+            role = msg.get("role", "")
+            content = msg.get("content", "")
+            if role == "system":
+                system_prompt = content
+            elif role == "user":
+                if user_prompt:
+                    user_prompt += "\n\n" + content
+                else:
+                    user_prompt = content
+        
+        # Use call method if we have both system and user prompts
+        if system_prompt and user_prompt:
+            return self.call(system_prompt, user_prompt, temperature=0.2, max_tokens=2048)
+        elif user_prompt:
+            # If no system prompt, use empty system prompt
+            return self.call("", user_prompt, temperature=0.2, max_tokens=2048)
+        else:
+            return "No user message found in chat messages"
 

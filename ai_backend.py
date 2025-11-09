@@ -9,6 +9,7 @@ from typing import Dict, Optional, Any
 import logging
 from datetime import datetime, timedelta
 import numpy as np
+import re
 
 # Load environment variables from .env file
 try:
@@ -99,17 +100,20 @@ def initialize_ai() -> bool:
         else:
             logger.warning("⚠️ Azure credentials not found. AI will work but without vector database retrieval.")
         
-        # Initialize Multi-Agent System
+        # Initialize Multi-Agent System with AgenticRAG
         if vector_dbs:
             # Use vector DBs if available
             try:
                 agentic_rag = AgenticRAG(nemotron, vector_dbs)
+                logger.info("✅ AgenticRAG initialized with vector databases")
                 _ai_system = MultiAgentSystem(nemotron, agentic_rag=agentic_rag)
+                logger.info("✅ Multi-Agent System initialized with preloaded AgenticRAG + Nemotron connection")
             except Exception as e:
                 logger.warning(f"⚠️ Could not initialize Multi-Agent System with vector DBs: {e}")
                 # Try to auto-initialize as fallback
                 try:
                     _ai_system = MultiAgentSystem(nemotron)
+                    logger.info("✅ Multi-Agent System initialized (fallback mode)")
                 except Exception as e2:
                     logger.warning(f"⚠️ Auto-initialization also failed: {e2}")
                     return False
@@ -117,13 +121,21 @@ def initialize_ai() -> bool:
             # Try to auto-initialize (will fail if no Azure credentials)
             try:
                 _ai_system = MultiAgentSystem(nemotron)
+                logger.info("✅ Multi-Agent System initialized (auto-initialized)")
             except Exception as e:
                 logger.warning(f"⚠️ Could not initialize vector DBs: {e}")
                 logger.info("💡 AI system will work but research queries may have limited data")
                 # For now, return False - we need vector DBs for research
                 return False
         
-        logger.info("✅ Multi-Agent System initialized")
+        # Verify AgenticRAG is available for chat
+        if hasattr(_ai_system, 'agentic_rag') and _ai_system.agentic_rag is not None:
+            logger.info("✅ AgenticRAG connection preloaded and ready for AI CoPilot chat")
+            logger.info(f"✅ Available carriers: {list(_ai_system.agentic_rag.vector_dbs.keys())}")
+        else:
+            logger.warning("⚠️ AgenticRAG not available - chat will use fallback mode")
+        
+        logger.info("✅ Multi-Agent System fully initialized")
         return True
         
     except Exception as e:
@@ -1266,4 +1278,79 @@ def get_ai_summary_data() -> Optional[Dict[str, Any]]:
     
     # Generate new data
     return generate_summary_json()
+
+
+def _clean_nemotron_response(response: str) -> str:
+    """
+    Clean Nemotron response by removing redacted reasoning tags and other unwanted XML/HTML tags.
+    
+    Args:
+        response: Raw response from Nemotron
+    
+    Returns:
+        Cleaned response with tags removed
+    """
+    if not response:
+        return response
+    
+    # Remove <think>...</think> tags and their content
+    response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL | re.IGNORECASE)
+    
+    # Also remove any other common reasoning/thinking tags that might appear
+    response = re.sub(r'<thinking>.*?</thinking>', '', response, flags=re.DOTALL | re.IGNORECASE)
+    response = re.sub(r'<reasoning>.*?</reasoning>', '', response, flags=re.DOTALL | re.IGNORECASE)
+    response = re.sub(r'<thought>.*?</thought>', '', response, flags=re.DOTALL | re.IGNORECASE)
+    
+    # Clean up any extra whitespace that might result from tag removal
+    response = re.sub(r'\n\s*\n\s*\n', '\n\n', response)  # Replace multiple newlines with double newline
+    response = response.strip()
+    
+    return response
+
+
+def get_ai_chat_response(query: str) -> Optional[str]:
+    """
+    Get AI chat response using AgenticRAG's direct_prompt function.
+    This function uses the preloaded AgenticRAG connection with Nemotron.
+    
+    Args:
+        query: User's chat query
+    
+    Returns:
+        AI response string from Nemotron via AgenticRAG (cleaned of reasoning tags), or None on failure
+    """
+    global _ai_system
+    
+    if _ai_system is None:
+        logger.warning("⚠️ AI system not initialized, cannot generate chat response")
+        return None
+    
+    if not hasattr(_ai_system, 'agentic_rag') or _ai_system.agentic_rag is None:
+        logger.warning("⚠️ AgenticRAG not available, cannot generate chat response")
+        return None
+    
+    try:
+        logger.info(f"💬 Processing chat query via AgenticRAG + Nemotron: {query[:100]}...")
+        
+        # Use direct_prompt which:
+        # 1. Retrieves context from vector databases (T-Mobile, AT&T, Verizon)
+        # 2. Combines context with user query
+        # 3. Sends to Nemotron AI for synthesis
+        # 4. Returns AI-generated response
+        response = _ai_system.agentic_rag.direct_prompt(query, k=10)
+        
+        if response and not response.startswith("Error generating response"):
+            # Clean the response to remove reasoning tags
+            cleaned_response = _clean_nemotron_response(response)
+            logger.info("✅ Chat response generated successfully from Nemotron (cleaned)")
+            return cleaned_response
+        else:
+            logger.warning(f"⚠️ Nemotron returned error response: {response}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"❌ Error generating chat response: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return None
 

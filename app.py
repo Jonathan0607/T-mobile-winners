@@ -20,7 +20,8 @@ try:
         get_ai_vibe_report_data,
         get_ai_competitive_data,
         get_ai_triage_data,
-        get_ai_summary_data
+        get_ai_summary_data,
+        get_ai_chat_response
     )
     AI_BACKEND_AVAILABLE = True
 except ImportError as e:
@@ -382,7 +383,7 @@ def get_triage_queue_data():
 
 @app.route('/api/vibecheck/chat', methods=['POST'])
 def chat():
-    """Handles chat requests from the AI Co-Pilot interface."""
+    """Handles chat requests from the AI Co-Pilot interface using AgenticRAG."""
     try:
         data = request.get_json()
         query = data.get('query', '')
@@ -390,12 +391,25 @@ def chat():
         if not query:
             return jsonify({'error': 'No query provided'}), 400
         
-        # Simulated AI response (in production, this would call Nemotron AI)
-        # For now, return a helpful mock response based on the query
-        response_text = generate_ai_response(query)
+        # Use AI backend with AgenticRAG if available
+        if AI_ENABLED and AI_BACKEND_AVAILABLE:
+            try:
+                ai_response = get_ai_chat_response(query)
+                if ai_response:
+                    logger.info("✅ Using AI-generated chat response from Nemotron")
+                    return jsonify({'response': ai_response}), 200
+                else:
+                    logger.warning("⚠️ AI chat response returned None, using fallback")
+            except Exception as e:
+                logger.error(f"❌ Error getting AI chat response: {e}")
+                # Fall through to fallback response
         
+        # Fallback to rule-based response if AI is not available
+        logger.info("ℹ️ Using rule-based fallback response")
+        response_text = generate_ai_response(query)
         return jsonify({'response': response_text}), 200
     except Exception as e:
+        logger.error(f"❌ Error in chat endpoint: {e}")
         return jsonify({'error': str(e)}), 500
 
 def generate_ai_response(query: str) -> str:
