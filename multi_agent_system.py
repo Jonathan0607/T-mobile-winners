@@ -128,40 +128,72 @@ class MultiAgentSystem:
     
     def _research_agent(self, user_query: str) -> str:
         """
-        Research Agent: Uses Agentic RAG to gather relevant information from Azure indexes.
+        Research Agent: Uses Agentic RAG to gather relevant information from ALL platforms.
+        
+        ENHANCED: Ensures comprehensive multi-platform data collection.
         
         Args:
             user_query: User's query
         
         Returns:
-            Research summary
+            Research summary with data from ALL platforms
         """
         system_prompt = (
-            "You are a Research Agent with access to multiple Azure Cognitive Search indexes "
-            "containing social media data (Reddit posts and Google Play Store reviews).\n\n"
-            "Your goal is to gather comprehensive, relevant information using the available retrieval tools.\n\n"
-            "RESEARCH STRATEGY:\n"
-            "1. Determine which platforms are most relevant for the query\n"
-            "2. Use retrieve_reddit_posts for general service feedback and discussions\n"
-            "3. Use retrieve_playstore_reviews for app-specific issues\n"
-            "4. Use retrieve_all_platforms for comprehensive analysis\n"
-            "5. You may use multiple tools if needed for thorough research\n\n"
-            "Your research summary should:\n"
-            "1. Clearly indicate which platforms were searched\n"
-            "2. Identify key themes and patterns from each source\n"
-            "3. Highlight specific complaints or issues with examples\n"
-            "4. Highlight and contextualize any positive feedback\n"
-            "5. Include relevant statistics (e.g., frequency of issues, ratings)\n"
-            "6. Be factual and only rely on retrieved information\n"
-            "7. Distinguish between Reddit discussions and Play Store reviews when relevant"
+            "You are a Research Agent with access to UNIFIED carrier indexes containing data from:\n"
+            "- Reddit community discussions (r/tmobile, r/verizon, r/ATT)\n"
+            "- Google Play Store reviews (Android app feedback)\n"
+            "- Apple App Store reviews (iOS app feedback)\n\n"
+            "MANDATORY RESEARCH PROTOCOL:\n"
+            "1. You MUST use retrieval tools to gather data from ALL platforms\n"
+            "2. For single-carrier analysis: Use 'retrieve_carrier_feedback' (gets all platforms)\n"
+            "3. For competitive analysis: Use 'retrieve_competitive_comparison' (gets all carriers × all platforms)\n"
+            "4. You may use 'retrieve_platform_specific' for deep-dives, but ONLY after getting comprehensive data\n\n"
+            "YOUR RESEARCH SUMMARY MUST INCLUDE:\n"
+            "1. DATA SOURCES SECTION:\n"
+            "   - Explicitly list which platforms were searched\n"
+            "   - Note the volume of data from each platform\n"
+            "   - Mention any platforms with limited/no data\n\n"
+            "2. PLATFORM-BY-PLATFORM ANALYSIS:\n"
+            "   - Reddit Findings: Community sentiment, recurring discussions, pain points\n"
+            "   - Play Store Findings: Android-specific issues, app ratings, common complaints\n"
+            "   - App Store Findings: iOS-specific issues, app ratings, user feedback\n\n"
+            "3. CROSS-PLATFORM PATTERNS:\n"
+            "   - Issues mentioned on Reddit AND in app reviews\n"
+            "   - Problems affecting both Android and iOS users\n"
+            "   - Universal complaints vs platform-specific issues\n\n"
+            "4. STATISTICAL BREAKDOWN:\n"
+            "   - Sentiment distribution per platform\n"
+            "   - Category frequency per platform\n"
+            "   - Rating averages (for app stores)\n"
+            "   - Engagement metrics (Reddit scores, review counts)\n\n"
+            "5. KEY THEMES WITH PLATFORM ATTRIBUTION:\n"
+            "   - For EACH major theme, specify which platforms it appears on\n"
+            "   - Example: 'Network connectivity issues (Reddit: 45 mentions, Play Store: 32 1-star reviews, App Store: 28 1-star reviews)'\n\n"
+            "6. NOTABLE EXAMPLES FROM EACH PLATFORM:\n"
+            "   - Quote specific Reddit posts\n"
+            "   - Quote specific Play Store reviews\n"
+            "   - Quote specific App Store reviews\n\n"
+            "CRITICAL: Your summary will be used by other agents. It must be:\n"
+            "- Comprehensive (covering ALL platforms)\n"
+            "- Structured (organized by platform)\n"
+            "- Factual (based only on retrieved data)\n"
+            "- Detailed (with specific examples and statistics)\n\n"
+            "DO NOT proceed without retrieving data from all available platforms."
         )
         
-        # Use Agentic RAG to get context-aware research
+        # Enhanced research prompt that explicitly requests multi-platform data
         research_prompt = (
-            f"User Query: {user_query}\n\n"
-            "Please research this topic thoroughly using the available retrieval tools. "
-            "Choose the most appropriate platforms based on the query. "
-            "Gather all relevant information and create a comprehensive research summary."
+            f"RESEARCH REQUEST: {user_query}\n\n"
+            "MANDATORY INSTRUCTIONS:\n"
+            "1. Retrieve feedback from ALL platforms (Reddit + Play Store + App Store)\n"
+            "2. If analyzing multiple carriers, retrieve from ALL carriers\n"
+            "3. Gather at least 10 results per platform for statistical significance\n"
+            "4. Create a comprehensive research summary following the required structure\n\n"
+            "Your research MUST cover:\n"
+            "- Reddit community discussions and sentiment\n"
+            "- Google Play Store Android user feedback and ratings\n"
+            "- Apple App Store iOS user feedback and ratings\n\n"
+            "Begin your research now. Use the retrieval tools to gather comprehensive multi-platform data."
         )
         
         return self.agentic_rag.query(research_prompt, system_prompt)
@@ -303,4 +335,21 @@ Ensure all platform attributions are accurate.
 """
         
         return self.nemotron.call(system_prompt, user_prompt, temperature=0.2, max_tokens=2048)
+    
+def research_query(self, user_query: str, verbose: bool = False) -> str:
+        """
+        Public method to execute research query using the research agent.
+        Returns research summary text that can be used for data extraction.
+        
+        Args:
+            user_query: User's query (e.g., "Analyze customer sentiment")
+            verbose: Whether to print progress messages
+        
+        Returns:
+            Research summary as string
+        """
+        if verbose:
+            print("🔍 Research Agent: Gathering information from Azure indexes...")
+        return self._research_agent(user_query)
+    
 

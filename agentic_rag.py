@@ -1,7 +1,7 @@
 """
 Agentic RAG implementation with intelligent retrieval decision-making.
 The agent decides WHEN to retrieve information from the vector database.
-Supports querying from multiple Azure Cognitive Search indexes (Reddit, Play Store).
+ENHANCED: Ensures comprehensive multi-platform retrieval for thorough analysis.
 """
 
 from nemotron_client import NemotronClient
@@ -11,7 +11,7 @@ import json
 
 
 class AgenticRAG:
-    """Agentic RAG system that intelligently decides when to retrieve context from multiple indexes."""
+    """Agentic RAG system that intelligently retrieves context from UNIFIED carrier indexes."""
     
     def __init__(
         self, 
@@ -23,8 +23,8 @@ class AgenticRAG:
         
         Args:
             nemotron_client: Initialized Nemotron client
-            vector_dbs: Either a single SocialMediaVectorDB or a dict mapping index types to databases
-                       e.g., {'reddit': reddit_db, 'playstore': playstore_db}
+            vector_dbs: Dict mapping carrier names to unified databases
+                       e.g., {'tmobile': tmobile_db, 'verizon': verizon_db, 'att': att_db}
         """
         self.nemotron = nemotron_client
         
@@ -36,247 +36,292 @@ class AgenticRAG:
             self.vector_dbs = {'default': vector_dbs}
             self.multi_index = False
         
-        # Define the retrieval tool schemas based on available indexes
+        # Define the retrieval tool schemas
         self.tool_schemas = self._build_tool_schemas()
     
     def _build_tool_schemas(self) -> List[Dict]:
-        """Build tool schemas based on available indexes."""
+        """Build tool schemas for unified carrier indexes."""
         schemas = []
         
-        if self.multi_index:
-            # Separate tools for each index
-            if 'reddit' in self.vector_dbs:
-                schemas.append({
-                    "type": "function",
-                    "function": {
-                        "name": "retrieve_reddit_posts",
-                        "description": "Searches Reddit posts from r/tmobile subreddit for relevant discussions, complaints, or feedback. Use this when looking for community discussions, user experiences, or general feedback on Reddit.",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "search_query": {
-                                    "type": "string",
-                                    "description": "Search query to find relevant Reddit posts"
-                                },
-                                "top_k": {
-                                    "type": "integer",
-                                    "description": "Number of posts to retrieve (default: 5)",
-                                    "default": 5
-                                },
-                                "filter_metadata": {
-                                    "type": "object",
-                                    "description": "Optional filters (e.g., {'sentiment': 'negative', 'category': 'network_connectivity'})",
-                                    "default": {}
-                                }
-                            },
-                            "required": ["search_query"]
-                        }
-                    }
-                })
-            
-            if 'playstore' in self.vector_dbs:
-                schemas.append({
-                    "type": "function",
-                    "function": {
-                        "name": "retrieve_playstore_reviews",
-                        "description": "Searches Google Play Store app reviews for T-Mobile apps. Use this when looking for app-specific feedback, ratings, bugs, or feature requests.",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "search_query": {
-                                    "type": "string",
-                                    "description": "Search query to find relevant app reviews"
-                                },
-                                "top_k": {
-                                    "type": "integer",
-                                    "description": "Number of reviews to retrieve (default: 5)",
-                                    "default": 5
-                                },
-                                "filter_metadata": {
-                                    "type": "object",
-                                    "description": "Optional filters (e.g., {'app_name': 'T-Mobile', 'rating': 1})",
-                                    "default": {}
-                                }
-                            },
-                            "required": ["search_query"]
-                        }
-                    }
-                })
-            
-            # Add a combined search tool
-            schemas.append({
-                "type": "function",
-                "function": {
-                    "name": "retrieve_all_platforms",
-                    "description": "Searches ALL available platforms (Reddit + Play Store) for comprehensive feedback. Use this when you need broad coverage across multiple sources.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "search_query": {
-                                "type": "string",
-                                "description": "Search query to find relevant posts/reviews across all platforms"
-                            },
-                            "top_k_per_platform": {
-                                "type": "integer",
-                                "description": "Number of results per platform (default: 3)",
-                                "default": 3
-                            }
+        # Tool to retrieve from ALL platforms within a carrier index
+        schemas.append({
+            "type": "function",
+            "function": {
+                "name": "retrieve_carrier_feedback",
+                "description": "Searches ALL platforms (Reddit, Play Store, App Store) for a specific carrier. Returns comprehensive feedback from community discussions, Android reviews, and iOS reviews. ALWAYS USE THIS for thorough multi-platform analysis.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "carrier": {
+                            "type": "string",
+                            "description": "Carrier to search ('tmobile', 'verizon', or 'att')",
+                            "enum": ["tmobile", "verizon", "att"]
                         },
-                        "required": ["search_query"]
-                    }
-                }
-            })
-        else:
-            # Single tool for backward compatibility
-            schemas.append({
-                "type": "function",
-                "function": {
-                    "name": "retrieve_social_media_posts",
-                    "description": "Searches the internal social media feedback database for relevant posts. Use this tool when the user's query requires specific, domain-specific information about the service, customer feedback, complaints, or social media posts.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "search_query": {
-                                "type": "string",
-                                "description": "The precise search query to find relevant social media posts"
-                            },
-                            "top_k": {
-                                "type": "integer",
-                                "description": "Number of posts to retrieve (default: 5)",
-                                "default": 5
-                            },
-                            "filter_metadata": {
-                                "type": "object",
-                                "description": "Optional metadata filters",
-                                "default": {}
-                            }
+                        "search_query": {
+                            "type": "string",
+                            "description": "Search query to find relevant feedback across all platforms"
                         },
-                        "required": ["search_query"]
-                    }
+                        "top_k_per_platform": {
+                            "type": "integer",
+                            "description": "Number of results per platform (default: 10 for comprehensive analysis)",
+                            "default": 10
+                        }
+                    },
+                    "required": ["carrier", "search_query"]
                 }
-            })
+            }
+        })
+        
+        # Tool to retrieve from specific platform only (when needed)
+        schemas.append({
+            "type": "function",
+            "function": {
+                "name": "retrieve_platform_specific",
+                "description": "Searches a SPECIFIC platform (Reddit, Play Store, or App Store) for a carrier. Use only when platform-specific insights are needed. For comprehensive analysis, use retrieve_carrier_feedback instead.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "carrier": {
+                            "type": "string",
+                            "description": "Carrier to search",
+                            "enum": ["tmobile", "verizon", "att"]
+                        },
+                        "platform": {
+                            "type": "string",
+                            "description": "Platform to search",
+                            "enum": ["reddit", "google_play", "app_store"]
+                        },
+                        "search_query": {
+                            "type": "string",
+                            "description": "Search query"
+                        },
+                        "top_k": {
+                            "type": "integer",
+                            "description": "Number of results (default: 10)",
+                            "default": 10
+                        }
+                    },
+                    "required": ["carrier", "platform", "search_query"]
+                }
+            }
+        })
+        
+        # Tool to compare ALL carriers across ALL platforms
+        schemas.append({
+            "type": "function",
+            "function": {
+                "name": "retrieve_competitive_comparison",
+                "description": "Searches ALL carriers (T-Mobile, Verizon, AT&T) across ALL platforms (Reddit, Play Store, App Store) for competitive analysis. MANDATORY for comparison queries.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "search_query": {
+                            "type": "string",
+                            "description": "Search query to find comparable feedback across all carriers"
+                        },
+                        "top_k_per_carrier_platform": {
+                            "type": "integer",
+                            "description": "Results per carrier per platform (default: 5)",
+                            "default": 5
+                        }
+                    },
+                    "required": ["search_query"]
+                }
+            }
+        })
         
         return schemas
     
-    def retrieve_reddit_posts(
+    def retrieve_carrier_feedback(
         self, 
+        carrier: str,
         search_query: str, 
-        top_k: int = 5, 
-        filter_metadata: Optional[Dict] = None
+        top_k_per_platform: int = 10
     ) -> str:
-        """Retrieve posts from Reddit index."""
-        if 'reddit' not in self.vector_dbs:
-            return "Error: Reddit index not available"
+        """
+        Retrieve from ALL platforms for a specific carrier.
         
-        if filter_metadata is None or (isinstance(filter_metadata, dict) and len(filter_metadata) == 0):
-            filter_metadata = None
+        ENHANCED: Ensures comprehensive multi-platform retrieval.
+        """
+        carrier_lower = carrier.lower()
+        if carrier_lower not in self.vector_dbs:
+            return f"Error: {carrier.upper()} index not available"
         
-        context = self.vector_dbs['reddit'].retrieve_context(search_query, top_k, filter_metadata)
-        return f"[Reddit Posts]\n{context}"
+        db = self.vector_dbs[carrier_lower]
+        results_by_platform = {}
+        
+        # Retrieve from each platform
+        for platform in ['reddit', 'google_play', 'app_store']:
+            try:
+                platform_results = db.search(
+                    query=search_query,
+                    top_k=top_k_per_platform,
+                    filter_metadata={'platform': platform}
+                )
+                results_by_platform[platform] = platform_results
+            except Exception as e:
+                results_by_platform[platform] = []
+        
+        # Format results with platform headers
+        output = [f"[{carrier.upper()} - COMPREHENSIVE MULTI-PLATFORM FEEDBACK]"]
+        output.append(f"Search Query: {search_query}\n")
+        
+        for platform, results in results_by_platform.items():
+            platform_name = {
+                'reddit': 'Reddit Community Discussions',
+                'google_play': 'Google Play Store Reviews (Android)',
+                'app_store': 'Apple App Store Reviews (iOS)'
+            }.get(platform, platform)
+            
+            output.append(f"\n{'='*60}")
+            output.append(f"{platform_name.upper()} ({len(results)} results)")
+            output.append('='*60)
+            
+            if results:
+                for i, r in enumerate(results, 1):
+                    text = r.get('text', '')
+                    rating = r.get('rating')
+                    score = r.get('score')
+                    category = r.get('category', 'general')
+                    sentiment = r.get('sentiment', 'neutral')
+                    
+                    output.append(f"\n{i}. [{category}] [{sentiment}]")
+                    if rating:
+                        output.append(f"   Rating: {'?' * rating}/5")
+                    if score is not None:
+                        output.append(f"   Reddit Score: {score}")
+                    output.append(f"   {text}")
+            else:
+                output.append(f"\n   No results found on {platform_name}")
+        
+        return "\n".join(output)
     
-    def retrieve_playstore_reviews(
-        self, 
-        search_query: str, 
-        top_k: int = 5, 
-        filter_metadata: Optional[Dict] = None
+    def retrieve_platform_specific(
+        self,
+        carrier: str,
+        platform: str,
+        search_query: str,
+        top_k: int = 10
     ) -> str:
-        """Retrieve reviews from Play Store index."""
-        if 'playstore' not in self.vector_dbs:
-            return "Error: Play Store index not available"
+        """Retrieve from specific platform only."""
+        carrier_lower = carrier.lower()
+        if carrier_lower not in self.vector_dbs:
+            return f"Error: {carrier.upper()} index not available"
         
-        if filter_metadata is None or (isinstance(filter_metadata, dict) and len(filter_metadata) == 0):
-            filter_metadata = None
+        platform_name = {
+            'reddit': 'Reddit',
+            'google_play': 'Google Play Store',
+            'app_store': 'Apple App Store'
+        }.get(platform, platform)
         
-        context = self.vector_dbs['playstore'].retrieve_context(search_query, top_k, filter_metadata)
-        return f"[Google Play Store Reviews]\n{context}"
+        db = self.vector_dbs[carrier_lower]
+        results = db.search(
+            query=search_query,
+            top_k=top_k,
+            filter_metadata={'platform': platform}
+        )
+        
+        output = [f"[{carrier.upper()} - {platform_name.upper()}]"]
+        output.append(f"Search Query: {search_query}\n")
+        
+        for i, r in enumerate(results, 1):
+            output.append(f"{i}. {r.get('text', '')}")
+        
+        return "\n".join(output)
     
-    def retrieve_all_platforms(
-        self, 
-        search_query: str, 
-        top_k_per_platform: int = 3
+    def retrieve_competitive_comparison(
+        self,
+        search_query: str,
+        top_k_per_carrier_platform: int = 5
     ) -> str:
-        """Retrieve from all available platforms."""
-        results = []
+        """
+        Retrieve from ALL carriers across ALL platforms for competitive analysis.
         
-        if 'reddit' in self.vector_dbs:
-            reddit_context = self.vector_dbs['reddit'].retrieve_context(search_query, top_k_per_platform)
-            results.append(f"[Reddit Posts]\n{reddit_context}")
+        ENHANCED: Ensures comprehensive competitive data collection.
+        """
+        output = ["[COMPETITIVE COMPARISON - ALL CARRIERS x ALL PLATFORMS]"]
+        output.append(f"Search Query: {search_query}\n")
         
-        if 'playstore' in self.vector_dbs:
-            playstore_context = self.vector_dbs['playstore'].retrieve_context(search_query, top_k_per_platform)
-            results.append(f"[Google Play Store Reviews]\n{playstore_context}")
+        for carrier in ['tmobile', 'verizon', 'att']:
+            if carrier not in self.vector_dbs:
+                continue
+            
+            output.append(f"\n{'#'*70}")
+            output.append(f"{carrier.upper()} FEEDBACK")
+            output.append('#'*70)
+            
+            db = self.vector_dbs[carrier]
+            
+            for platform in ['reddit', 'google_play', 'app_store']:
+                platform_name = {
+                    'reddit': 'Reddit',
+                    'google_play': 'Google Play Store',
+                    'app_store': 'Apple App Store'
+                }.get(platform, platform)
+                
+                try:
+                    results = db.search(
+                        query=search_query,
+                        top_k=top_k_per_carrier_platform,
+                        filter_metadata={'platform': platform}
+                    )
+                    
+                    output.append(f"\n{'-'*60}")
+                    output.append(f"{platform_name} ({len(results)} results)")
+                    output.append('-'*60)
+                    
+                    for i, r in enumerate(results, 1):
+                        text = r.get('text', '')
+                        rating = r.get('rating')
+                        sentiment = r.get('sentiment', 'neutral')
+                        
+                        output.append(f"\n{i}. [{sentiment}]")
+                        if rating:
+                            output.append(f"   {'?' * rating}/5")
+                        output.append(f"   {text[:200]}...")
+                except Exception as e:
+                    output.append(f"\n   Error retrieving {platform_name}: {e}")
         
-        return "\n\n".join(results)
-    
-    def retrieve_social_media_posts(
-        self, 
-        search_query: str, 
-        top_k: int = 5, 
-        filter_metadata: Optional[Dict] = None
-    ) -> str:
-        """Backward compatibility method for single DB mode."""
-        if 'default' in self.vector_dbs:
-            if filter_metadata is None or (isinstance(filter_metadata, dict) and len(filter_metadata) == 0):
-                filter_metadata = None
-            return self.vector_dbs['default'].retrieve_context(search_query, top_k, filter_metadata)
-        else:
-            # If multi-index, combine all
-            return self.retrieve_all_platforms(search_query, top_k)
+        return "\n".join(output)
     
     def query(self, user_query: str, system_prompt: Optional[str] = None) -> str:
         """
-        Query the agentic RAG system. The agent decides if retrieval is needed.
+        Query the agentic RAG system. Agent MUST use tools for comprehensive analysis.
         
-        Args:
-            user_query: User's question or request
-            system_prompt: Optional custom system prompt (uses default if None)
-        
-        Returns:
-            Agent's response with retrieved context if needed
+        ENHANCED: Enforces multi-platform retrieval.
         """
         if system_prompt is None:
-            if self.multi_index:
-                system_prompt = (
-                    "You are an intelligent Research Agent with access to multiple data sources.\n\n"
-                    "AVAILABLE TOOLS:\n"
-                )
-                if 'reddit' in self.vector_dbs:
-                    system_prompt += "- retrieve_reddit_posts: Search Reddit r/tmobile discussions\n"
-                if 'playstore' in self.vector_dbs:
-                    system_prompt += "- retrieve_playstore_reviews: Search Google Play Store app reviews\n"
-                system_prompt += "- retrieve_all_platforms: Search ALL platforms for comprehensive coverage\n\n"
-                
-                system_prompt += (
-                    "DECISION RULES:\n"
-                    "1. For app-specific issues (crashes, bugs, UI): Use retrieve_playstore_reviews\n"
-                    "2. For general service feedback (network, billing, support): Use retrieve_reddit_posts\n"
-                    "3. For comprehensive analysis: Use retrieve_all_platforms\n"
-                    "4. For general knowledge questions: Answer directly without tools\n\n"
-                    "After retrieving context, analyze it thoroughly and provide a comprehensive answer."
-                )
-            else:
-                system_prompt = (
-                    "You are an intelligent Research Agent. Your goal is to gather accurate, "
-                    "relevant information to answer user queries.\n\n"
-                    "You have access to a tool called 'retrieve_social_media_posts' that searches "
-                    "an internal database of social media posts about a service.\n\n"
-                    "DECISION RULES:\n"
-                    "1. If the query requires specific, domain-specific information, use the tool.\n"
-                    "2. If the query is general knowledge, answer directly without using the tool.\n"
-                    "3. After retrieving context, analyze it and provide a comprehensive answer.\n\n"
-                    "Always be thorough and accurate in your responses."
-                )
+            system_prompt = (
+                "You are an intelligent Research Agent with access to UNIFIED carrier indexes.\n"
+                "Each index contains feedback from Reddit, Google Play Store, and Apple App Store.\n\n"
+                "CRITICAL RULES FOR COMPREHENSIVE ANALYSIS:\n"
+                "1. ALWAYS use 'retrieve_carrier_feedback' for single-carrier analysis - it searches ALL platforms\n"
+                "2. ALWAYS use 'retrieve_competitive_comparison' for multi-carrier analysis - it covers everything\n"
+                "3. NEVER rely on a single platform - always gather Reddit + Play Store + App Store data\n"
+                "4. When analyzing, EXPLICITLY mention findings from each platform separately\n"
+                "5. Identify patterns that appear across multiple platforms vs platform-specific issues\n\n"
+                "AVAILABLE TOOLS:\n"
+                "- retrieve_carrier_feedback: Get ALL platform feedback for one carrier (USE THIS FIRST)\n"
+                "- retrieve_platform_specific: Get specific platform data (use for platform-deep-dives)\n"
+                "- retrieve_competitive_comparison: Compare ALL carriers across ALL platforms (MANDATORY for comparisons)\n\n"
+                "RESPONSE FORMAT:\n"
+                "After retrieval, structure your analysis as:\n"
+                "1. OVERVIEW: Key findings across all platforms\n"
+                "2. REDDIT INSIGHTS: What community discussions reveal\n"
+                "3. PLAY STORE INSIGHTS: Android user feedback\n"
+                "4. APP STORE INSIGHTS: iOS user feedback\n"
+                "5. CROSS-PLATFORM PATTERNS: Issues appearing everywhere\n"
+                "6. PLATFORM-SPECIFIC ISSUES: Unique to one platform\n"
+                "7. RECOMMENDATIONS: Actionable items prioritized by impact\n\n"
+                "MANDATE: You MUST retrieve data from ALL platforms before drawing conclusions."
+            )
         
         # Define the tools mapping
-        tools = {}
-        if self.multi_index:
-            if 'reddit' in self.vector_dbs:
-                tools['retrieve_reddit_posts'] = self.retrieve_reddit_posts
-            if 'playstore' in self.vector_dbs:
-                tools['retrieve_playstore_reviews'] = self.retrieve_playstore_reviews
-            tools['retrieve_all_platforms'] = self.retrieve_all_platforms
-        else:
-            tools['retrieve_social_media_posts'] = self.retrieve_social_media_posts
+        tools = {
+            'retrieve_carrier_feedback': self.retrieve_carrier_feedback,
+            'retrieve_platform_specific': self.retrieve_platform_specific,
+            'retrieve_competitive_comparison': self.retrieve_competitive_comparison
+        }
         
         # Call with tool support
         response = self.nemotron.call_with_tools(
